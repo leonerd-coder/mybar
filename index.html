@@ -1,2189 +1,1296 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-
-  <meta name="theme-color" content="#111111">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="MyBar">
-
-  <link rel="manifest" href="manifest.json">
-  <link rel="apple-touch-icon" href="icon-180.png">
-
-  <title>MyBar</title>
-
-  <style>
-    * {
-      box-sizing: border-box;
-    }
-
-    :root {
-      --bg: #f5f5f7;
-      --card: #ffffff;
-      --text: #171717;
-      --sub: #777;
-      --line: #e7e7e7;
-      --accent: #111;
-      --soft: #eeeeef;
-      --danger: #d33;
-    }
-
-    html {
-      background: var(--bg);
-    }
-
-    body {
-      margin: 0;
-      padding: 0 0 calc(86px + env(safe-area-inset-bottom));
-      background: var(--bg);
-      color: var(--text);
-      font-family:
-        -apple-system,
-        BlinkMacSystemFont,
-        "Apple SD Gothic Neo",
-        "Noto Sans KR",
-        sans-serif;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    button,
-    input,
-    select {
-      font: inherit;
-    }
-
-    button {
-      cursor: pointer;
-      border: 0;
-    }
-
-    /* ---------- Header ---------- */
-
-    .header {
-      position: sticky;
-      top: 0;
-      z-index: 50;
-      padding:
-        calc(15px + env(safe-area-inset-top))
-        18px
-        14px;
-      background: rgba(255,255,255,.94);
-      backdrop-filter: blur(18px);
-      border-bottom: 1px solid var(--line);
-    }
-
-    .header-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-    }
-
-    .brand {
-      font-size: 25px;
-      font-weight: 800;
-      letter-spacing: -1px;
-    }
-
-    .brand-sub {
-      margin-top: 2px;
-      color: var(--sub);
-      font-size: 11px;
-    }
-
-    .header-action {
-      width: 42px;
-      height: 42px;
-      border-radius: 14px;
-      background: #111;
-      color: #fff;
-      font-size: 23px;
-    }
-
-    /* ---------- Main ---------- */
-
-    main {
-      width: 100%;
-      max-width: 760px;
-      margin: 0 auto;
-      padding: 18px;
-    }
-
-    .page {
-      display: none;
-    }
-
-    .page.active {
-      display: block;
-    }
-
-    .page-title {
-      margin: 4px 0 4px;
-      font-size: 27px;
-      font-weight: 800;
-      letter-spacing: -.8px;
-    }
-
-    .page-description {
-      margin: 0 0 20px;
-      color: var(--sub);
-      font-size: 13px;
-      line-height: 1.5;
-    }
-
-    /* ---------- Hero ---------- */
-
-    .hero {
-      position: relative;
-      overflow: hidden;
-      margin-bottom: 14px;
-      padding: 24px;
-      border-radius: 24px;
-      background: #111;
-      color: #fff;
-    }
-
-    .hero::after {
-      content: "🍸";
-      position: absolute;
-      right: 20px;
-      bottom: -13px;
-      font-size: 90px;
-      opacity: .16;
-    }
-
-    .hero h1 {
-      margin: 0 0 7px;
-      font-size: 28px;
-      letter-spacing: -1px;
-    }
-
-    .hero p {
-      position: relative;
-      z-index: 1;
-      max-width: 250px;
-      margin: 0;
-      color: #ccc;
-      font-size: 13px;
-      line-height: 1.6;
-    }
-
-    /* ---------- Stats ---------- */
-
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 9px;
-      margin-bottom: 24px;
-    }
-
-    .stat {
-      padding: 15px 8px;
-      border: 1px solid var(--line);
-      border-radius: 17px;
-      background: var(--card);
-      text-align: center;
-    }
-
-    .stat-number {
-      display: block;
-      font-size: 22px;
-      font-weight: 800;
-    }
-
-    .stat-label {
-      display: block;
-      margin-top: 3px;
-      color: var(--sub);
-      font-size: 10px;
-    }
-
-    /* ---------- Section ---------- */
-
-    .section-head {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin: 24px 0 12px;
-    }
-
-    .section-head h2 {
-      margin: 0;
-      font-size: 18px;
-      letter-spacing: -.5px;
-    }
-
-    .text-button {
-      background: transparent;
-      color: var(--sub);
-      font-size: 12px;
-    }
-
-    /* ---------- Search ---------- */
-
-    .search-box {
-      position: relative;
-      margin-bottom: 12px;
-    }
-
-    .search-box input {
-      width: 100%;
-      height: 48px;
-      padding: 0 16px 0 45px;
-      border: 1px solid var(--line);
-      border-radius: 15px;
-      outline: none;
-      background: #fff;
-    }
-
-    .search-box input:focus {
-      border-color: #999;
-    }
-
-    .search-icon {
-      position: absolute;
-      left: 16px;
-      top: 13px;
-      color: #888;
-      font-size: 19px;
-    }
-
-    /* ---------- Filters ---------- */
-
-    .filters {
-      display: flex;
-      gap: 7px;
-      overflow-x: auto;
-      margin: 0 -2px 16px;
-      padding: 2px;
-      scrollbar-width: none;
-    }
-
-    .filters::-webkit-scrollbar {
-      display: none;
-    }
-
-    .filter {
-      flex: 0 0 auto;
-      padding: 8px 13px;
-      border-radius: 20px;
-      background: #e9e9eb;
-      color: #666;
-      font-size: 12px;
-      font-weight: 600;
-    }
-
-    .filter.active {
-      background: #111;
-      color: #fff;
-    }
-
-    /* ---------- Cocktail Cards ---------- */
-
-    .cocktail-grid {
-      display: grid;
-      gap: 10px;
-    }
-
-    .cocktail-card {
-      position: relative;
-      padding: 17px;
-      border: 1px solid var(--line);
-      border-radius: 19px;
-      background: #fff;
-      box-shadow: 0 2px 8px rgba(0,0,0,.025);
-      transition: transform .15s;
-    }
-
-    .cocktail-card:active {
-      transform: scale(.985);
-    }
-
-    .cocktail-top {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 10px;
-    }
-
-    .cocktail-name {
-      margin: 0 0 5px;
-      font-size: 18px;
-      font-weight: 800;
-      letter-spacing: -.5px;
-    }
-
-    .cocktail-style {
-      color: #888;
-      font-size: 11px;
-    }
-
-    .favorite-button {
-      flex: 0 0 auto;
-      width: 36px;
-      height: 36px;
-      border-radius: 12px;
-      background: #f0f0f1;
-      color: #999;
-      font-size: 19px;
-    }
-
-    .favorite-button.active {
-      background: #111;
-      color: #fff;
-    }
-
-    .ingredient-tags {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 5px;
-      margin-top: 13px;
-    }
-
-    .ingredient-tag {
-      padding: 6px 8px;
-      border-radius: 8px;
-      background: #f0f0f1;
-      color: #555;
-      font-size: 10px;
-    }
-
-    .ingredient-tag.missing {
-      background: #f5eaea;
-      color: #a55;
-      text-decoration: line-through;
-    }
-
-    .card-footer {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-top: 14px;
-    }
-
-    .availability {
-      font-size: 11px;
-      font-weight: 700;
-    }
-
-    .available {
-      color: #287a48;
-    }
-
-    .not-available {
-      color: #a66;
-    }
-
-    .detail-button {
-      padding: 8px 11px;
-      border-radius: 9px;
-      background: #111;
-      color: #fff;
-      font-size: 10px;
-      font-weight: 700;
-    }
-
-    /* ---------- Ingredients ---------- */
-
-    .ingredient-summary {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 12px;
-      padding: 18px;
-      border-radius: 18px;
-      background: #111;
-      color: #fff;
-    }
-
-    .ingredient-summary strong {
-      display: block;
-      font-size: 25px;
-    }
-
-    .ingredient-summary span {
-      color: #aaa;
-      font-size: 11px;
-    }
-
-    .add-button {
-      padding: 10px 13px;
-      border-radius: 11px;
-      background: #fff;
-      color: #111;
-      font-size: 12px;
-      font-weight: 800;
-    }
-
-    .ingredient-category {
-      margin-top: 18px;
-    }
-
-    .category-title {
-      margin: 0 0 8px;
-      color: #777;
-      font-size: 11px;
-      font-weight: 800;
-    }
-
-    .ingredient-list {
-      display: grid;
-      gap: 7px;
-    }
-
-    .ingredient-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      padding: 13px 14px;
-      border: 1px solid var(--line);
-      border-radius: 13px;
-      background: #fff;
-    }
-
-    .ingredient-row-name {
-      font-size: 13px;
-      font-weight: 700;
-    }
-
-    .ingredient-row-type {
-      margin-top: 2px;
-      color: #999;
-      font-size: 10px;
-    }
-
-    .delete-ingredient {
-      padding: 7px 9px;
-      border-radius: 8px;
-      background: #f1f1f2;
-      color: #999;
-      font-size: 10px;
-    }
-
-    /* ---------- Empty ---------- */
-
-    .empty {
-      padding: 35px 20px;
-      border: 1px dashed #d6d6d6;
-      border-radius: 17px;
-      background: #fff;
-      color: #888;
-      text-align: center;
-      font-size: 13px;
-      line-height: 1.6;
-    }
-
-    /* ---------- Bottom Nav ---------- */
-
-    .bottom-nav {
-      position: fixed;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      z-index: 100;
-      display: flex;
-      justify-content: center;
-      gap: 4px;
-      height: calc(70px + env(safe-area-inset-bottom));
-      padding-bottom: env(safe-area-inset-bottom);
-      border-top: 1px solid var(--line);
-      background: rgba(255,255,255,.96);
-      backdrop-filter: blur(18px);
-    }
-
-    .nav-button {
-      flex: 1;
-      max-width: 100px;
-      background: transparent;
-      color: #999;
-    }
-
-    .nav-icon {
-      display: block;
-      margin-bottom: 3px;
-      font-size: 21px;
-    }
-
-    .nav-label {
-      font-size: 10px;
-    }
-
-    .nav-button.active {
-      color: #111;
-      font-weight: 800;
-    }
-
-    /* ---------- Modal ---------- */
-
-    .modal {
-      position: fixed;
-      inset: 0;
-      z-index: 200;
-      display: flex;
-      align-items: flex-end;
-      justify-content: center;
-      background: rgba(0,0,0,.5);
-    }
-
-    .modal.hidden {
-      display: none;
-    }
-
-    .modal-sheet {
-      width: 100%;
-      max-width: 760px;
-      max-height: 88vh;
-      overflow-y: auto;
-      padding:
-        20px
-        20px
-        calc(25px + env(safe-area-inset-bottom));
-      border-radius: 25px 25px 0 0;
-      background: #fff;
-      animation: slideUp .2s ease-out;
-    }
-
-    @keyframes slideUp {
-      from {
-        transform: translateY(100%);
-      }
-      to {
-        transform: translateY(0);
-      }
-    }
-
-    .modal-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 20px;
-    }
-
-    .modal-header h2 {
-      margin: 0;
-      font-size: 21px;
-    }
-
-    .close-button {
-      width: 34px;
-      height: 34px;
-      border-radius: 50%;
-      background: #eee;
-      color: #555;
-    }
-
-    .detail-title {
-      margin: 0 0 5px;
-      font-size: 28px;
-      letter-spacing: -1px;
-    }
-
-    .detail-style {
-      color: #888;
-      font-size: 12px;
-    }
-
-    .detail-description {
-      margin: 17px 0;
-      padding: 15px;
-      border-radius: 14px;
-      background: #f5f5f6;
-      color: #666;
-      font-size: 13px;
-      line-height: 1.65;
-    }
-
-    .recipe-title {
-      margin: 22px 0 10px;
-      font-size: 15px;
-    }
-
-    .recipe-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 11px 0;
-      border-bottom: 1px solid #eee;
-      font-size: 13px;
-    }
-
-    .recipe-amount {
-      color: #777;
-      font-size: 12px;
-    }
-
-    .method {
-      margin-top: 12px;
-      padding: 15px;
-      border-radius: 14px;
-      background: #111;
-      color: #ddd;
-      font-size: 12px;
-      line-height: 1.7;
-    }
-
-    /* ---------- Form ---------- */
-
-    .form-group {
-      margin-bottom: 15px;
-    }
-
-    .form-label {
-      display: block;
-      margin-bottom: 7px;
-      font-size: 12px;
-      font-weight: 800;
-    }
-
-    .form-input,
-    .form-select {
-      width: 100%;
-      height: 48px;
-      padding: 0 13px;
-      border: 1px solid #ddd;
-      border-radius: 12px;
-      outline: none;
-      background: #fff;
-    }
-
-    .form-input:focus,
-    .form-select:focus {
-      border-color: #888;
-    }
-
-    .submit-button {
-      width: 100%;
-      height: 50px;
-      margin-top: 5px;
-      border-radius: 13px;
-      background: #111;
-      color: #fff;
-      font-weight: 800;
-    }
-
-    /* ---------- Responsive ---------- */
-
-    @media (min-width: 650px) {
-      .cocktail-grid {
-        grid-template-columns: 1fr 1fr;
-      }
-    }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#111111">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>MyBar</title>
+
+<style>
+*{box-sizing:border-box}
+body{
+ margin:0;background:#f5f5f7;color:#171717;
+ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif
+}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer;border:0}
+.app{max-width:760px;margin:auto;min-height:100vh;padding-bottom:86px}
+
+header{
+ padding:22px 18px 10px;background:#111;color:white;
+ position:sticky;top:0;z-index:10
+}
+.brand{font-size:25px;font-weight:800}
+.sub{opacity:.65;font-size:12px;margin-top:3px}
+
+.search{
+ margin-top:15px;width:100%;padding:13px 15px;
+ border-radius:13px;border:0;background:#292929;
+ color:white;outline:0
+}
+.search::placeholder{color:#aaa}
+
+main{padding:16px}
+
+.hero{
+ background:#fff;border-radius:20px;padding:18px;
+ margin-bottom:14px;box-shadow:0 3px 16px #00000009
+}
+.hero h1{margin:0 0 7px;font-size:22px}
+.hero p{margin:0;color:#666;font-size:14px}
+
+.row{
+ display:flex;gap:8px;overflow:auto;padding:2px 0 9px
+}
+
+.pill{
+ white-space:nowrap;padding:9px 13px;border-radius:999px;
+ background:#e9e9ed;color:#555
+}
+.pill.active{background:#111;color:white}
+
+.grid{
+ display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px
+}
+
+.card{
+ background:#fff;border-radius:17px;padding:15px;
+ box-shadow:0 2px 10px #00000008;position:relative
+}
+
+.card h3{margin:0 28px 6px 0;font-size:16px}
+.meta{font-size:12px;color:#777}
+
+.tag{
+ display:inline-block;margin-top:8px;padding:5px 8px;
+ border-radius:8px;background:#f0f0f2;font-size:11px
+}
+.ok{background:#e5f7e9;color:#167238}
+.warn{background:#fff2d8;color:#8a5a00}
+.bad{background:#fbe5e5;color:#9a2626}
+
+.fav{
+ position:absolute;right:12px;top:10px;
+ background:none;font-size:21px
+}
+
+.sectionTitle{
+ font-size:18px;font-weight:800;margin:20px 0 10px
+}
+
+.empty{
+ text-align:center;color:#777;padding:35px 10px
+}
+
+.bottom{
+ position:fixed;bottom:0;left:0;right:0;background:#fff;
+ border-top:1px solid #ddd;z-index:20;
+ display:flex;justify-content:center
+}
+
+.bottom button{
+ flex:1;max-width:760px;background:white;
+ padding:11px 2px 12px;color:#777;font-size:11px
+}
+
+.bottom span{
+ display:block;font-size:21px;margin-bottom:2px
+}
+
+.bottom .on{color:#111;font-weight:800}
+
+.list{
+ display:flex;flex-direction:column;gap:8px
+}
+
+.item{
+ background:#fff;border-radius:14px;padding:13px 14px;
+ display:flex;justify-content:space-between;align-items:center
+}
+
+.item small{color:#777}
+
+.danger{
+ color:#c33;background:#fff0f0;
+ border-radius:9px;padding:6px 9px
+}
+
+.overlay{
+ position:fixed;inset:0;background:#0008;z-index:30;
+ display:none;align-items:flex-end
+}
+
+.sheet{
+ background:#fff;width:100%;max-width:760px;margin:auto;
+ border-radius:24px 24px 0 0;max-height:90vh;
+ overflow:auto;padding:20px
+}
+
+.close{
+ float:right;background:#eee;border-radius:50%;
+ width:34px;height:34px
+}
+
+.sheet h2{margin:3px 45px 8px}
+
+.field{margin:12px 0}
+
+.field label{
+ display:block;font-size:12px;color:#666;margin-bottom:6px
+}
+
+.field input,.field select,.field textarea{
+ width:100%;padding:11px;border:1px solid #ddd;
+ border-radius:11px;background:#fafafa
+}
+
+.primary{
+ background:#111;color:white;padding:12px 16px;
+ border-radius:11px;font-weight:700
+}
+
+.secondary{
+ background:#eee;padding:12px 16px;border-radius:11px
+}
+
+.actions{
+ display:flex;gap:8px;margin-top:15px
+}
+
+.actions>*{flex:1}
+
+.recipeLine{
+ display:flex;justify-content:space-between;
+ border-bottom:1px solid #eee;padding:10px 0
+}
+
+.missing{color:#c33}
+.match{color:#16803c}
+
+.statgrid{
+ display:grid;grid-template-columns:repeat(3,1fr);gap:8px
+}
+
+.stat{
+ background:#fff;border-radius:15px;padding:13px;
+ text-align:center
+}
+
+.stat b{font-size:21px;display:block}
+.stat small{color:#777}
+
+.fab{
+ position:fixed;right:20px;bottom:82px;
+ background:#111;color:#fff;border-radius:50%;
+ width:55px;height:55px;font-size:25px;
+ z-index:15;box-shadow:0 5px 18px #0003
+}
+
+@media(min-width:650px){
+ .grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+ .overlay{align-items:center}
+ .sheet{border-radius:22px;max-height:85vh}
+}
+</style>
 </head>
 
 <body>
 
-<header class="header">
-  <div class="header-row">
-    <div>
-      <div class="brand">MyBar</div>
-      <div class="brand-sub">나만의 홈바 & 칵테일</div>
-    </div>
+<div class="app">
 
-    <button class="header-action" onclick="openAddIngredient()">
-      ＋
-    </button>
-  </div>
+<header>
+ <div class="brand">🍸 MyBar</div>
+ <div class="sub">내 재료로 만드는 나만의 칵테일 바</div>
+
+ <input
+  id="globalSearch"
+  class="search"
+  placeholder="칵테일 또는 재료 검색">
 </header>
 
-<main>
+<main id="main"></main>
 
-  <!-- ================= HOME ================= -->
+</div>
 
-  <section id="page-home" class="page active">
+<nav class="bottom">
 
-    <div class="hero">
-      <h1>오늘은 뭐 마실까?</h1>
-      <p>
-        내가 가지고 있는 재료를 기준으로
-        만들 수 있는 칵테일을 찾아보세요.
-      </p>
-    </div>
+<button data-tab="home">
+ <span>🏠</span>홈
+</button>
 
-    <div class="stats">
-      <div class="stat">
-        <span class="stat-number" id="statIngredients">0</span>
-        <span class="stat-label">보유 재료</span>
-      </div>
+<button data-tab="cocktails">
+ <span>🍸</span>칵테일
+</button>
 
-      <div class="stat">
-        <span class="stat-number" id="statAvailable">0</span>
-        <span class="stat-label">만들 수 있음</span>
-      </div>
+<button data-tab="ingredients">
+ <span>🧊</span>내 재료
+</button>
 
-      <div class="stat">
-        <span class="stat-number" id="statFavorites">0</span>
-        <span class="stat-label">즐겨찾기</span>
-      </div>
-    </div>
-
-    <div class="section-head">
-      <h2>🍸 지금 만들 수 있는 칵테일</h2>
-      <button class="text-button" onclick="goToCocktails(true)">
-        전체 보기
-      </button>
-    </div>
-
-    <div id="homeCocktails" class="cocktail-grid"></div>
-
-  </section>
-
-
-  <!-- ================= COCKTAILS ================= -->
-
-  <section id="page-cocktails" class="page">
-
-    <h1 class="page-title">칵테일</h1>
-    <p class="page-description">
-      보유 재료로 만들 수 있는 칵테일을 찾아보세요.
-    </p>
-
-    <div class="search-box">
-      <span class="search-icon">⌕</span>
-      <input
-        id="cocktailSearch"
-        type="search"
-        placeholder="칵테일 또는 재료 검색"
-        oninput="renderCocktails()"
-      >
-    </div>
-
-    <div class="filters">
-      <button class="filter active" data-filter="all"
-        onclick="setCocktailFilter('all', this)">
-        전체
-      </button>
-
-      <button class="filter" data-filter="available"
-        onclick="setCocktailFilter('available', this)">
-        만들 수 있음
-      </button>
-
-      <button class="filter" data-filter="favorite"
-        onclick="setCocktailFilter('favorite', this)">
-        ❤️ 즐겨찾기
-      </button>
-    </div>
-
-    <div id="cocktailList" class="cocktail-grid"></div>
-
-  </section>
-
-
-  <!-- ================= INGREDIENTS ================= -->
-
-  <section id="page-ingredients" class="page">
-
-    <h1 class="page-title">내 재료</h1>
-    <p class="page-description">
-      현재 가지고 있는 술과 믹서를 관리하세요.
-    </p>
-
-    <div class="ingredient-summary">
-      <div>
-        <strong id="ingredientTotal">0</strong>
-        <span>개의 재료를 보유 중</span>
-      </div>
-
-      <button class="add-button" onclick="openAddIngredient()">
-        ＋ 재료 추가
-      </button>
-    </div>
-
-    <div id="ingredientContainer"></div>
-
-  </section>
-
-
-  <!-- ================= FAVORITES ================= -->
-
-  <section id="page-favorites" class="page">
-
-    <h1 class="page-title">즐겨찾기</h1>
-    <p class="page-description">
-      자주 마시는 칵테일을 모아볼 수 있어요.
-    </p>
-
-    <div id="favoriteList" class="cocktail-grid"></div>
-
-  </section>
-
-</main>
-
-
-<!-- ================= BOTTOM NAV ================= -->
-
-<nav class="bottom-nav">
-
-  <button
-    class="nav-button active"
-    data-page="home"
-    onclick="showPage('home', this)"
-  >
-    <span class="nav-icon">🏠</span>
-    <span class="nav-label">홈</span>
-  </button>
-
-  <button
-    class="nav-button"
-    data-page="cocktails"
-    onclick="showPage('cocktails', this)"
-  >
-    <span class="nav-icon">🍸</span>
-    <span class="nav-label">칵테일</span>
-  </button>
-
-  <button
-    class="nav-button"
-    data-page="ingredients"
-    onclick="showPage('ingredients', this)"
-  >
-    <span class="nav-icon">🥃</span>
-    <span class="nav-label">내 재료</span>
-  </button>
-
-  <button
-    class="nav-button"
-    data-page="favorites"
-    onclick="showPage('favorites', this)"
-  >
-    <span class="nav-icon">❤️</span>
-    <span class="nav-label">즐겨찾기</span>
-  </button>
+<button data-tab="favorites">
+ <span>❤️</span>즐겨찾기
+</button>
 
 </nav>
 
+<button class="fab" id="addCocktail">＋</button>
 
-<!-- ================= DETAIL MODAL ================= -->
-
-<div id="detailModal" class="modal hidden" onclick="closeModalIfBackground(event)">
-
-  <div class="modal-sheet">
-
-    <div class="modal-header">
-      <div></div>
-
-      <button class="close-button" onclick="closeDetail()">
-        ✕
-      </button>
-    </div>
-
-    <div id="detailContent"></div>
-
-  </div>
-
+<div class="overlay" id="modal">
+ <div class="sheet" id="sheet"></div>
 </div>
-
-
-<!-- ================= ADD INGREDIENT MODAL ================= -->
-
-<div id="addModal" class="modal hidden" onclick="closeAddIfBackground(event)">
-
-  <div class="modal-sheet">
-
-    <div class="modal-header">
-      <h2>재료 추가</h2>
-
-      <button class="close-button" onclick="closeAddIngredient()">
-        ✕
-      </button>
-    </div>
-
-    <div class="form-group">
-      <label class="form-label">재료 이름</label>
-
-      <input
-        id="newIngredientName"
-        class="form-input"
-        type="text"
-        placeholder="예: 진, 레몬주스, 토닉워터"
-      >
-    </div>
-
-    <div class="form-group">
-      <label class="form-label">종류</label>
-
-      <select id="newIngredientType" class="form-select">
-        <option value="base">베이스 술</option>
-        <option value="liqueur">리큐르</option>
-        <option value="syrup">시럽</option>
-        <option value="mixer">주스 / 믹서</option>
-        <option value="other">기타</option>
-      </select>
-    </div>
-
-    <button class="submit-button" onclick="addIngredient()">
-      재료 추가하기
-    </button>
-
-  </div>
-
-</div>
-
 
 <script>
 
-  /* =========================================================
-     MyBar - Cocktail Database
-     ========================================================= */
-
-  const cocktails = [
-
-    {
-      id: "gin-tonic",
-      name: "진토닉",
-      style: "Highball",
-      description: "진의 향과 토닉워터의 쌉쌀한 탄산이 어우러지는 가장 간단한 칵테일.",
-      ingredients: [
-        ["진", "45ml"],
-        ["토닉워터", "90~120ml"]
-      ],
-      method: "얼음을 가득 채운 하이볼 글라스에 진을 넣고 토닉워터를 천천히 부은 뒤 가볍게 저어주세요."
-    },
-
-    {
-      id: "screwdriver",
-      name: "스크루드라이버",
-      style: "Juicy",
-      description: "보드카와 오렌지주스만으로 만드는 간단한 오렌지 칵테일.",
-      ingredients: [
-        ["보드카", "45ml"],
-        ["오렌지주스", "90~120ml"]
-      ],
-      method: "얼음이 든 잔에 보드카를 넣고 오렌지주스를 채운 뒤 가볍게 저어주세요."
-    },
-
-    {
-      id: "black-russian",
-      name: "블랙 러시안",
-      style: "Short",
-      description: "보드카와 커피 리큐르의 진하고 달콤한 조합.",
-      ingredients: [
-        ["보드카", "45ml"],
-        ["깔루아", "20ml"]
-      ],
-      method: "얼음이 든 올드패션드 글라스에 재료를 넣고 충분히 저어주세요."
-    },
-
-    {
-      id: "white-russian",
-      name: "화이트 러시안",
-      style: "Creamy",
-      description: "블랙 러시안에 우유를 더해 부드럽게 만든 칵테일.",
-      ingredients: [
-        ["보드카", "45ml"],
-        ["깔루아", "20ml"],
-        ["우유", "30ml"]
-      ],
-      method: "얼음을 넣은 잔에 보드카와 깔루아를 넣고 우유를 부어 가볍게 섞어주세요."
-    },
-
-    {
-      id: "rum-cola",
-      name: "럼 콜라",
-      style: "Highball",
-      description: "럼과 콜라를 이용한 간단한 하이볼.",
-      ingredients: [
-        ["럼", "45ml"],
-        ["콜라", "120ml"]
-      ],
-      method: "얼음을 가득 넣은 잔에 럼을 넣고 콜라를 채워 가볍게 저어주세요."
-    },
-
-    {
-      id: "whisky-cola",
-      name: "위스키 콜라",
-      style: "Highball",
-      description: "버번 또는 스카치와 콜라의 달콤하고 묵직한 조합.",
-      ingredients: [
-        ["버번위스키", "45ml"],
-        ["콜라", "120ml"]
-      ],
-      method: "얼음이 든 잔에 위스키를 넣고 콜라를 채워주세요."
-    },
-
-    {
-      id: "malibu-orange",
-      name: "말리부 오렌지",
-      style: "Tropical",
-      description: "코코넛 풍미와 오렌지주스가 어우러지는 달콤한 칵테일.",
-      ingredients: [
-        ["말리부럼", "45ml"],
-        ["오렌지주스", "120ml"]
-      ],
-      method: "얼음이 든 잔에 말리부를 넣고 오렌지주스를 채워주세요."
-    },
-
-    {
-      id: "malibu-pineapple",
-      name: "말리부 파인애플",
-      style: "Tropical",
-      description: "코코넛과 파인애플의 대표적인 트로피컬 조합.",
-      ingredients: [
-        ["말리부럼", "45ml"],
-        ["파인애플주스", "120ml"]
-      ],
-      method: "얼음이 든 잔에 재료를 넣고 가볍게 저어주세요."
-    },
-
-    {
-      id: "fuzzy-navel",
-      name: "퍼지 네이블",
-      style: "Fruity",
-      description: "피치트리의 복숭아 향과 오렌지주스가 잘 어울리는 칵테일.",
-      ingredients: [
-        ["피치트리", "45ml"],
-        ["오렌지주스", "120ml"]
-      ],
-      method: "얼음이 든 잔에 피치트리를 넣고 오렌지주스를 채워주세요."
-    },
-
-    {
-      id: "peach-cranberry",
-      name: "피치 크랜베리",
-      style: "Fruity",
-      description: "복숭아와 크랜베리의 달콤새콤한 조합.",
-      ingredients: [
-        ["피치트리", "45ml"],
-        ["크랜베리주스", "120ml"]
-      ],
-      method: "얼음이 든 잔에 피치트리와 크랜베리주스를 넣고 저어주세요."
-    },
-
-    {
-      id: "vodka-cranberry",
-      name: "보드카 크랜베리",
-      style: "Fruity",
-      description: "보드카와 크랜베리주스로 만드는 깔끔한 칵테일.",
-      ingredients: [
-        ["보드카", "45ml"],
-        ["크랜베리주스", "120ml"]
-      ],
-      method: "얼음이 든 잔에 보드카와 크랜베리주스를 넣고 저어주세요."
-    },
-
-    {
-      id: "vodka-pineapple",
-      name: "보드카 파인애플",
-      style: "Fruity",
-      description: "보드카와 파인애플주스의 달콤하고 부드러운 조합.",
-      ingredients: [
-        ["보드카", "45ml"],
-        ["파인애플주스", "120ml"]
-      ],
-      method: "얼음이 든 잔에 재료를 넣고 잘 저어주세요."
-    },
-
-    {
-      id: "rum-pineapple",
-      name: "럼 파인애플",
-      style: "Tropical",
-      description: "럼과 파인애플의 기본적인 트로피컬 조합.",
-      ingredients: [
-        ["럼", "45ml"],
-        ["파인애플주스", "120ml"]
-      ],
-      method: "얼음이 든 잔에 럼과 파인애플주스를 넣고 저어주세요."
-    },
-
-    {
-      id: "amaretto-orange",
-      name: "아마레또 오렌지",
-      style: "Fruity",
-      description: "디사론노의 아몬드 계열 풍미와 오렌지의 조합.",
-      ingredients: [
-        ["디사론노", "45ml"],
-        ["오렌지주스", "120ml"]
-      ],
-      method: "얼음이 든 잔에 디사론노를 넣고 오렌지주스를 채워주세요."
-    },
-
-    {
-      id: "godmother",
-      name: "갓마더",
-      style: "Short",
-      description: "보드카와 아마레또를 섞어 만드는 달콤하고 묵직한 칵테일.",
-      ingredients: [
-        ["보드카", "45ml"],
-        ["디사론노", "20ml"]
-      ],
-      method: "얼음이 든 올드패션드 글라스에 재료를 넣고 저어주세요."
-    },
-
-    {
-      id: "melon-ball",
-      name: "멜론 볼",
-      style: "Fruity",
-      description: "멜론 리큐르와 오렌지의 달콤한 조합.",
-      ingredients: [
-        ["보드카", "30ml"],
-        ["멜론리큐르", "30ml"],
-        ["오렌지주스", "90ml"]
-      ],
-      method: "얼음이 든 잔에 모든 재료를 넣고 잘 저어주세요."
-    },
-
-    {
-      id: "blue-hawaiian",
-      name: "블루 하와이안 스타일",
-      style: "Tropical",
-      description: "럼, 블루큐라소, 파인애플의 화려한 트로피컬 조합.",
-      ingredients: [
-        ["럼", "30ml"],
-        ["블루큐라소", "20ml"],
-        ["파인애플주스", "90ml"]
-      ],
-      method: "얼음과 함께 셰이커에서 흔들거나 잔에 직접 넣고 충분히 섞어주세요."
-    },
-
-    {
-      id: "limoncello-tonic",
-      name: "리몬첼로 토닉",
-      style: "Highball",
-      description: "리몬첼로의 레몬 풍미에 토닉의 탄산과 쌉쌀함을 더한 음료.",
-      ingredients: [
-        ["리몬첼로", "45ml"],
-        ["토닉워터", "120ml"]
-      ],
-      method: "얼음이 가득한 잔에 리몬첼로를 넣고 토닉워터를 천천히 부어주세요."
-    },
-
-    {
-      id: "peppermint-milk",
-      name: "페퍼민트 밀크",
-      style: "Creamy",
-      description: "페퍼민트 리큐르와 우유를 이용한 달콤하고 시원한 스타일.",
-      ingredients: [
-        ["페퍼민트그린", "30ml"],
-        ["우유", "120ml"]
-      ],
-      method: "얼음이 든 잔에 재료를 넣고 잘 섞어주세요."
-    },
-
-    {
-      id: "mint-cacao",
-      name: "민트 카카오 밀크",
-      style: "Dessert",
-      description: "페퍼민트와 화이트 크렘드카카오, 우유를 이용한 디저트 스타일.",
-      ingredients: [
-        ["페퍼민트그린", "20ml"],
-        ["크렘드카카오 화이트", "20ml"],
-        ["우유", "100ml"]
-      ],
-      method: "얼음과 함께 충분히 섞어 차갑게 즐겨주세요."
-    },
-
-    {
-      id: "chocolate-milk",
-      name: "초콜릿 밀크",
-      style: "Dessert",
-      description: "화이트 크렘드카카오의 달콤한 초콜릿 풍미와 우유의 조합.",
-      ingredients: [
-        ["크렘드카카오 화이트", "30ml"],
-        ["우유", "120ml"]
-      ],
-      method: "얼음이 든 잔에 넣고 잘 섞어주세요."
-    },
-
-    {
-      id: "banana-milk",
-      name: "바나나 밀크",
-      style: "Dessert",
-      description: "바나나 리큐르와 우유로 만드는 부드러운 디저트 칵테일.",
-      ingredients: [
-        ["바나나리큐르", "30ml"],
-        ["우유", "120ml"]
-      ],
-      method: "얼음이 든 잔에 재료를 넣고 충분히 섞어주세요."
-    },
-
-    {
-      id: "coconut-pineapple",
-      name: "코코넛 파인애플",
-      style: "Tropical",
-      description: "말리부와 파인애플을 이용한 간단한 트로피컬 드링크.",
-      ingredients: [
-        ["말리부럼", "45ml"],
-        ["파인애플주스", "90ml"],
-        ["코코넛시럽", "10ml"]
-      ],
-      method: "얼음과 함께 잘 섞어주세요."
-    },
-
-    {
-      id: "elderflower-tonic",
-      name: "엘더플라워 토닉",
-      style: "Highball",
-      description: "엘더플라워의 꽃향과 토닉워터의 쌉쌀함을 즐기는 간단한 음료.",
-      ingredients: [
-        ["생제르망", "30ml"],
-        ["토닉워터", "120ml"]
-      ],
-      method: "얼음이 가득한 잔에 생제르망을 넣고 토닉워터를 채워주세요."
-    },
-
-    {
-      id: "blue-orange",
-      name: "블루 오렌지",
-      style: "Fruity",
-      description: "블루큐라소와 오렌지주스를 이용한 색감 좋은 칵테일.",
-      ingredients: [
-        ["블루큐라소", "30ml"],
-        ["오렌지주스", "120ml"]
-      ],
-      method: "얼음이 든 잔에 블루큐라소와 오렌지주스를 넣고 섞어주세요."
-    },
-
-    {
-      id: "blue-curacao-tonic",
-      name: "블루큐라소 토닉",
-      style: "Highball",
-      description: "블루큐라소와 토닉워터로 만드는 간단한 탄산 칵테일.",
-      ingredients: [
-        ["블루큐라소", "30ml"],
-        ["토닉워터", "120ml"]
-      ],
-      method: "얼음이 가득한 잔에 블루큐라소를 넣고 토닉워터를 채워주세요."
-    },
-
-    {
-      id: "grapefruit-gin",
-      name: "자몽 진",
-      style: "Citrus",
-      description: "진과 자몽 풍미를 조합한 상큼한 스타일.",
-      ingredients: [
-        ["진", "45ml"],
-        ["자몽시럽", "15ml"],
-        ["토닉워터", "120ml"]
-      ],
-      method: "얼음이 가득한 잔에 진과 자몽시럽을 넣고 토닉워터를 채워주세요."
-    },
-
-    {
-      id: "apple-vodka",
-      name: "애플 보드카",
-      style: "Fruity",
-      description: "보드카와 사과주스를 이용한 깔끔하고 달콤한 조합.",
-      ingredients: [
-        ["보드카", "45ml"],
-        ["사과주스", "120ml"]
-      ],
-      method: "얼음이 든 잔에 재료를 넣고 저어주세요."
-    },
-
-    {
-      id: "apple-gin",
-      name: "애플 진 하이볼",
-      style: "Highball",
-      description: "진과 사과주스의 향긋한 조합.",
-      ingredients: [
-        ["진", "45ml"],
-        ["사과주스", "90ml"],
-        ["토닉워터", "60ml"]
-      ],
-      method: "얼음이 가득한 잔에 진과 사과주스를 넣고 토닉워터를 채워주세요."
-    },
-
-    {
-      id: "grenadine-vodka",
-      name: "그레나딘 보드카",
-      style: "Fruity",
-      description: "보드카에 석류 계열의 달콤한 그레나딘을 더한 칵테일.",
-      ingredients: [
-        ["보드카", "45ml"],
-        ["그레나딘시럽", "15ml"],
-        ["오렌지주스", "90ml"]
-      ],
-      method: "얼음이 든 잔에 모든 재료를 넣고 잘 저어주세요."
-    },
-
-    {
-      id: "peach-soda",
-      name: "피치 사이다",
-      style: "Fizzy",
-      description: "피치트리와 사이다를 이용한 달콤한 탄산 칵테일.",
-      ingredients: [
-        ["피치트리", "45ml"],
-        ["사이다", "120ml"]
-      ],
-      method: "얼음이 든 잔에 피치트리를 넣고 사이다를 천천히 부어주세요."
-    },
-
-    {
-      id: "melon-soda",
-      name: "멜론 사이다",
-      style: "Fizzy",
-      description: "멜론 리큐르와 사이다를 이용한 달콤한 탄산 칵테일.",
-      ingredients: [
-        ["멜론리큐르", "45ml"],
-        ["사이다", "120ml"]
-      ],
-      method: "얼음이 든 잔에 멜론리큐르를 넣고 사이다를 채워주세요."
-    },
-
-    {
-      id: "cassis-orange",
-      name: "카시스 오렌지",
-      style: "Fruity",
-      description: "카시스의 베리 풍미와 오렌지의 조합.",
-      ingredients: [
-        ["카시스시럽", "20ml"],
-        ["오렌지주스", "120ml"]
-      ],
-      method: "얼음이 든 잔에 카시스시럽과 오렌지주스를 넣고 섞어주세요."
-    }
-
-  ];
-
-
-  /* =========================================================
-     Default Ingredients
-     ========================================================= */
-
-  const defaultIngredients = [
-
-    ["진", "base"],
-    ["럼", "base"],
-    ["브랜디", "base"],
-    ["스카치위스키", "base"],
-    ["버번위스키", "base"],
-    ["보드카", "base"],
-
-    ["깔루아", "liqueur"],
-    ["트리플섹", "liqueur"],
-    ["크렘드카카오 화이트", "liqueur"],
-    ["크렘드카카오 브라운", "liqueur"],
-    ["생제르망", "liqueur"],
-    ["디사론노", "liqueur"],
-    ["페퍼민트그린", "liqueur"],
-    ["피치트리", "liqueur"],
-    ["말리부럼", "liqueur"],
-    ["힙노틱", "liqueur"],
-    ["버터스카치리큐르", "liqueur"],
-    ["블루큐라소", "liqueur"],
-    ["바나나리큐르", "liqueur"],
-    ["리몬첼로", "liqueur"],
-    ["멜론리큐르", "liqueur"],
-
-    ["바닐라시럽", "syrup"],
-    ["그레나딘시럽", "syrup"],
-    ["그린애플시럽", "syrup"],
-    ["모히또민트시럽", "syrup"],
-    ["리치시럽", "syrup"],
-    ["자몽시럽", "syrup"],
-    ["카시스시럽", "syrup"],
-    ["수박시럽", "syrup"],
-    ["블루큐라소시럽", "syrup"],
-    ["엘더플라워시럽", "syrup"],
-    ["코코넛시럽", "syrup"],
-    ["피치시럽", "syrup"],
-    ["검시럽", "syrup"],
-
-    ["콜라", "mixer"],
-    ["사이다", "mixer"],
-    ["오렌지주스", "mixer"],
-    ["크랜베리주스", "mixer"],
-    ["파인애플주스", "mixer"],
-    ["사과주스", "mixer"],
-    ["우유", "mixer"],
-    ["토닉워터", "mixer"]
-
-  ];
-
-
-  /* =========================================================
-     Local Storage
-     ========================================================= */
-
-  let ingredients =
-    JSON.parse(localStorage.getItem("mybarIngredients")) || null;
-
-  let favorites =
-    JSON.parse(localStorage.getItem("mybarFavorites")) || [];
-
-  if (!ingredients) {
-    ingredients = defaultIngredients.map(item => ({
-      name: item[0],
-      type: item[1]
-    }));
-
-    saveIngredients();
-  }
-
-
-  function saveIngredients() {
-    localStorage.setItem(
-      "mybarIngredients",
-      JSON.stringify(ingredients)
-    );
-  }
-
-
-  function saveFavorites() {
-    localStorage.setItem(
-      "mybarFavorites",
-      JSON.stringify(favorites)
-    );
-  }
-
-
-  /* =========================================================
-     Helpers
-     ========================================================= */
-
-  function ownedNames() {
-    return new Set(
-      ingredients.map(item => item.name.toLowerCase())
-    );
-  }
-
-
-  function isAvailable(cocktail) {
-
-    const owned = ownedNames();
-
-    return cocktail.ingredients.every(item =>
-      owned.has(item[0].toLowerCase())
-    );
-  }
-
-
-  function missingIngredients(cocktail) {
-
-    const owned = ownedNames();
-
-    return cocktail.ingredients
-      .filter(item =>
-        !owned.has(item[0].toLowerCase())
-      )
-      .map(item => item[0]);
-  }
-
-
-  function escapeHtml(text) {
-
-    return String(text)
-      .replaceAll("&", "&amp;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;")
-      .replaceAll('"', "&quot;")
-      .replaceAll("'", "&#039;");
-  }
-
-
-  function typeName(type) {
-
-    const names = {
-      base: "베이스 술",
-      liqueur: "리큐르",
-      syrup: "시럽",
-      mixer: "주스 / 믹서",
-      other: "기타"
-    };
-
-    return names[type] || "기타";
-  }
-
-
-  /* =========================================================
-     Page Navigation
-     ========================================================= */
-
-  function showPage(page, button) {
-
-    document
-      .querySelectorAll(".page")
-      .forEach(item =>
-        item.classList.remove("active")
-      );
-
-    document
-      .getElementById("page-" + page)
-      .classList.add("active");
-
-    document
-      .querySelectorAll(".nav-button")
-      .forEach(item =>
-        item.classList.remove("active")
-      );
-
-    if (button) {
-      button.classList.add("active");
-    } else {
-
-      const target =
-        document.querySelector(
-          '.nav-button[data-page="' + page + '"]'
-        );
-
-      if (target) {
-        target.classList.add("active");
-      }
-    }
-
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth"
-    });
-
-    if (page === "cocktails") {
-      renderCocktails();
-    }
-
-    if (page === "ingredients") {
-      renderIngredients();
-    }
-
-    if (page === "favorites") {
-      renderFavorites();
-    }
-  }
-
-
-  function goToCocktails(availableOnly) {
-
-    showPage("cocktails");
-
-    document
-      .querySelectorAll(".filter")
-      .forEach(item =>
-        item.classList.remove("active")
-      );
-
-    const target = availableOnly
-      ? document.querySelector('[data-filter="available"]')
-      : document.querySelector('[data-filter="all"]');
-
-    target.classList.add("active");
-
-    cocktailFilter =
-      availableOnly ? "available" : "all";
-
-    renderCocktails();
-  }
-
-
-  /* =========================================================
-     Cocktail Rendering
-     ========================================================= */
-
-  let cocktailFilter = "all";
-
-
-  function cocktailCard(cocktail) {
-
-    const available = isAvailable(cocktail);
-    const missing = missingIngredients(cocktail);
-    const favorite = favorites.includes(cocktail.id);
-
-    return `
-      <article class="cocktail-card">
-
-        <div class="cocktail-top">
-
-          <div onclick="openDetail('${cocktail.id}')">
-
-            <h3 class="cocktail-name">
-              ${escapeHtml(cocktail.name)}
-            </h3>
-
-            <div class="cocktail-style">
-              ${escapeHtml(cocktail.style)}
-            </div>
-
-          </div>
-
-          <button
-            class="favorite-button ${favorite ? "active" : ""}"
-            onclick="toggleFavorite('${cocktail.id}')"
-          >
-            ${favorite ? "♥" : "♡"}
-          </button>
-
-        </div>
-
-        <div class="ingredient-tags">
-
-          ${cocktail.ingredients.map(item => {
-
-            const have =
-              ownedNames().has(item[0].toLowerCase());
-
-            return `
-              <span class="ingredient-tag ${have ? "" : "missing"}">
-                ${escapeHtml(item[0])}
-              </span>
-            `;
-
-          }).join("")}
-
-        </div>
-
-        <div class="card-footer">
-
-          <span class="availability ${
-            available ? "available" : "not-available"
-          }">
-
-            ${
-              available
-                ? "✓ 지금 만들 수 있음"
-                : "부족: " + missing.join(", ")
-            }
-
-          </span>
-
-          <button
-            class="detail-button"
-            onclick="openDetail('${cocktail.id}')"
-          >
-            레시피
-          </button>
-
-        </div>
-
-      </article>
-    `;
-  }
-
-
-  function renderCocktails() {
-
-    const container =
-      document.getElementById("cocktailList");
-
-    const search =
-      document
-        .getElementById("cocktailSearch")
-        .value
-        .trim()
-        .toLowerCase();
-
-    let list = cocktails.filter(cocktail => {
-
-      const searchTarget = [
-        cocktail.name,
-        cocktail.style,
-        cocktail.description,
-        ...cocktail.ingredients.map(item => item[0])
-      ]
-      .join(" ")
-      .toLowerCase();
-
-      return searchTarget.includes(search);
-    });
-
-
-    if (cocktailFilter === "available") {
-      list = list.filter(isAvailable);
-    }
-
-
-    if (cocktailFilter === "favorite") {
-      list = list.filter(item =>
-        favorites.includes(item.id)
-      );
-    }
-
-
-    if (list.length === 0) {
-
-      container.innerHTML = `
-        <div class="empty">
-          검색 조건에 맞는 칵테일이 없습니다.
-        </div>
-      `;
-
-      return;
-    }
-
-
-    container.innerHTML =
-      list.map(cocktailCard).join("");
-  }
-
-
-  function setCocktailFilter(filter, button) {
-
-    cocktailFilter = filter;
-
-    document
-      .querySelectorAll(".filter")
-      .forEach(item =>
-        item.classList.remove("active")
-      );
-
-    button.classList.add("active");
-
-    renderCocktails();
-  }
-
-
-  /* =========================================================
-     Home
-     ========================================================= */
-
-  function renderHome() {
-
-    const available =
-      cocktails.filter(isAvailable);
-
-    document.getElementById("statIngredients")
-      .textContent = ingredients.length;
-
-    document.getElementById("statAvailable")
-      .textContent = available.length;
-
-    document.getElementById("statFavorites")
-      .textContent = favorites.length;
-
-
-    const home =
-      document.getElementById("homeCocktails");
-
-
-    if (available.length === 0) {
-
-      home.innerHTML = `
-        <div class="empty">
-          현재 보유한 재료로 만들 수 있는
-          칵테일이 없습니다.<br>
-          재료를 추가해보세요.
-        </div>
-      `;
-
-      return;
-    }
-
-
-    home.innerHTML =
-      available
-        .slice(0, 6)
-        .map(cocktailCard)
-        .join("");
-  }
-
-
-  /* =========================================================
-     Favorites
-     ========================================================= */
-
-  function toggleFavorite(id) {
-
-    if (favorites.includes(id)) {
-
-      favorites =
-        favorites.filter(item => item !== id);
-
-    } else {
-
-      favorites.push(id);
-    }
-
-    saveFavorites();
-
-    renderHome();
-    renderCocktails();
-    renderFavorites();
-  }
-
-
-  function renderFavorites() {
-
-    const container =
-      document.getElementById("favoriteList");
-
-    const list =
-      cocktails.filter(item =>
-        favorites.includes(item.id)
-      );
-
-
-    if (list.length === 0) {
-
-      container.innerHTML = `
-        <div class="empty">
-          아직 즐겨찾기한 칵테일이 없습니다.<br>
-          ❤️ 버튼을 눌러 추가해보세요.
-        </div>
-      `;
-
-      return;
-    }
-
-
-    container.innerHTML =
-      list.map(cocktailCard).join("");
-  }
-
-
-  /* =========================================================
-     Cocktail Detail
-     ========================================================= */
-
-  function openDetail(id) {
-
-    const cocktail =
-      cocktails.find(item => item.id === id);
-
-    if (!cocktail) return;
-
-
-    const available =
-      isAvailable(cocktail);
-
-    const favorite =
-      favorites.includes(cocktail.id);
-
-
-    document.getElementById("detailContent").innerHTML = `
-
-      <h1 class="detail-title">
-        ${escapeHtml(cocktail.name)}
-      </h1>
-
-      <div class="detail-style">
-        ${escapeHtml(cocktail.style)}
-      </div>
-
-      <div class="detail-description">
-        ${escapeHtml(cocktail.description)}
-      </div>
-
-      <button
-        class="submit-button"
-        onclick="toggleFavorite('${cocktail.id}'); openDetail('${cocktail.id}')"
-      >
-        ${favorite ? "♥ 즐겨찾기 해제" : "♡ 즐겨찾기 추가"}
-      </button>
-
-      <h3 class="recipe-title">
-        재료
-      </h3>
-
-      ${
-        cocktail.ingredients.map(item => {
-
-          const have =
-            ownedNames().has(
-              item[0].toLowerCase()
-            );
-
-          return `
-            <div class="recipe-row">
-
-              <span>
-                ${have ? "✓" : "○"}
-                ${escapeHtml(item[0])}
-              </span>
-
-              <span class="recipe-amount">
-                ${escapeHtml(item[1])}
-              </span>
-
-            </div>
-          `;
-
-        }).join("")
-      }
-
-      <h3 class="recipe-title">
-        만드는 법
-      </h3>
-
-      <div class="method">
-        ${escapeHtml(cocktail.method)}
-      </div>
-
-      <div style="
-        margin-top:15px;
-        color:${available ? "#287a48" : "#a66"};
-        font-size:12px;
-        font-weight:700;
-      ">
-        ${
-          available
-            ? "✓ 현재 모든 재료를 가지고 있습니다."
-            : "부족한 재료: " +
-              missingIngredients(cocktail).join(", ")
-        }
-      </div>
-
-    `;
-
-
-    document
-      .getElementById("detailModal")
-      .classList.remove("hidden");
-  }
-
-
-  function closeDetail() {
-
-    document
-      .getElementById("detailModal")
-      .classList.add("hidden");
-  }
-
-
-  function closeModalIfBackground(event) {
-
-    if (event.target.id === "detailModal") {
-      closeDetail();
-    }
-  }
-
-
-  /* =========================================================
-     Ingredients
-     ========================================================= */
-
-  function renderIngredients() {
-
-    const container =
-      document.getElementById("ingredientContainer");
-
-    document.getElementById("ingredientTotal")
-      .textContent = ingredients.length;
-
-
-    const categories = [
-      ["base", "🥃 베이스 술"],
-      ["liqueur", "🍹 리큐르"],
-      ["syrup", "🍯 시럽"],
-      ["mixer", "🧃 주스 / 믹서"],
-      ["other", "📦 기타"]
-    ];
-
-
-    container.innerHTML =
-      categories.map(category => {
-
-        const list =
-          ingredients.filter(
-            item => item.type === category[0]
-          );
-
-
-        if (list.length === 0) {
-          return "";
-        }
-
-
-        return `
-
-          <div class="ingredient-category">
-
-            <h3 class="category-title">
-              ${category[1]}
-            </h3>
-
-            <div class="ingredient-list">
-
-              ${list.map(item => {
-
-                const index =
-                  ingredients.indexOf(item);
-
-                return `
-                  <div class="ingredient-row">
-
-                    <div>
-                      <div class="ingredient-row-name">
-                        ${escapeHtml(item.name)}
-                      </div>
-
-                      <div class="ingredient-row-type">
-                        ${typeName(item.type)}
-                      </div>
-                    </div>
-
-                    <button
-                      class="delete-ingredient"
-                      onclick="deleteIngredient(${index})"
-                    >
-                      삭제
-                    </button>
-
-                  </div>
-                `;
-
-              }).join("")}
-
-            </div>
-
-          </div>
-
-        `;
-
-      }).join("");
-  }
-
-
-  function openAddIngredient() {
-
-    document
-      .getElementById("addModal")
-      .classList.remove("hidden");
-
-    setTimeout(() => {
-
-      document
-        .getElementById("newIngredientName")
-        .focus();
-
-    }, 100);
-  }
-
-
-  function closeAddIngredient() {
-
-    document
-      .getElementById("addModal")
-      .classList.add("hidden");
-
-    document
-      .getElementById("newIngredientName")
-      .value = "";
-  }
-
+const defaultIngredients=[
 
-  function closeAddIfBackground(event) {
-
-    if (event.target.id === "addModal") {
-      closeAddIngredient();
-    }
-  }
-
+"진","럼","브랜디","스카치위스키","버번위스키","보드카",
 
-  function addIngredient() {
+"깔루아","트리플섹","크렘드카카오 화이트",
+"크렘드카카오 브라운","생제르망","디사론노",
+"페퍼민트그린","피치트리","말리부럼","힙노틱",
+"버터스카치리큐르","블루큐라소","바나나리큐르",
+"리몬첼로","멜론리큐르",
 
-    const input =
-      document.getElementById("newIngredientName");
+"바닐라시럽","그레나딘시럽","그린애플시럽",
+"모히또민트시럽","리치시럽","자몽시럽","카시스시럽",
+"수박시럽","블루큐라소시럽","엘더플라워시럽",
+"코코넛시럽","피치시럽","검시럽",
 
-    const name =
-      input.value.trim();
+"콜라","사이다","오렌지주스","크랜베리주스",
+"파인애플주스","사과주스","우유","토닉워터"
 
-    const type =
-      document.getElementById("newIngredientType").value;
+];
 
+const recipes=[
 
-    if (!name) {
+["진토닉","진","진|45ml","토닉워터|120ml",13],
 
-      alert("재료 이름을 입력해주세요.");
+["스크루드라이버","보드카",
+"보드카|45ml","오렌지주스|120ml",13],
 
-      return;
-    }
+["블랙 러시안","보드카",
+"보드카|45ml","깔루아|20ml",26],
 
+["화이트 러시안","보드카",
+"보드카|45ml","깔루아|20ml","우유|30ml",18],
 
-    const exists =
-      ingredients.some(
-        item =>
-          item.name.toLowerCase() === name.toLowerCase()
-      );
+["럼 콜라","럼",
+"럼|45ml","콜라|120ml",13],
 
+["위스키 콜라","버번위스키",
+"버번위스키|45ml","콜라|120ml",13],
 
-    if (exists) {
+["말리부 오렌지","말리부럼",
+"말리부럼|45ml","오렌지주스|120ml",9],
 
-      alert("이미 등록된 재료입니다.");
+["말리부 파인애플","말리부럼",
+"말리부럼|45ml","파인애플주스|120ml",9],
 
-      return;
-    }
+["퍼지 네이블","피치트리",
+"피치트리|45ml","오렌지주스|120ml",10],
 
+["피치 크랜베리","피치트리",
+"피치트리|45ml","크랜베리주스|120ml",10],
 
-    ingredients.push({
-      name: name,
-      type: type
-    });
+["보드카 크랜베리","보드카",
+"보드카|45ml","크랜베리주스|120ml",13],
 
+["보드카 파인애플","보드카",
+"보드카|45ml","파인애플주스|120ml",13],
 
-    saveIngredients();
+["럼 파인애플","럼",
+"럼|45ml","파인애플주스|120ml",13],
 
-    closeAddIngredient();
+["아마레또 오렌지","디사론노",
+"디사론노|45ml","오렌지주스|120ml",10],
 
-    renderAll();
+["갓마더","보드카",
+"보드카|45ml","디사론노|20ml",25],
 
-    showPage("ingredients");
-  }
+["멜론 볼","보드카",
+"보드카|30ml","멜론리큐르|30ml",
+"오렌지주스|90ml",12],
 
+["블루 하와이안 스타일","럼",
+"럼|30ml","블루큐라소|20ml",
+"파인애플주스|90ml",12],
 
-  function deleteIngredient(index) {
+["리몬첼로 토닉","리몬첼로",
+"리몬첼로|45ml","토닉워터|120ml",11],
 
-    const item =
-      ingredients[index];
+["페퍼민트 밀크","페퍼민트그린",
+"페퍼민트그린|30ml","우유|120ml",6],
 
-    if (!item) return;
+["민트 카카오 밀크","페퍼민트그린",
+"페퍼민트그린|20ml",
+"크렘드카카오 화이트|20ml",
+"우유|100ml",6],
 
+["초콜릿 밀크","크렘드카카오 화이트",
+"크렘드카카오 화이트|30ml","우유|120ml",6],
 
-    if (
-      confirm(
-        `"${item.name}"을(를) 내 재료에서 삭제할까요?`
-      )
-    ) {
+["바나나 밀크","바나나리큐르",
+"바나나리큐르|30ml","우유|120ml",6],
 
-      ingredients.splice(index, 1);
+["코코넛 파인애플","말리부럼",
+"말리부럼|45ml","파인애플주스|90ml",
+"코코넛시럽|10ml",9],
 
-      saveIngredients();
+["엘더플라워 토닉","생제르망",
+"생제르망|30ml","토닉워터|120ml",7],
 
-      renderAll();
-    }
-  }
+["블루 오렌지","블루큐라소",
+"블루큐라소|30ml","오렌지주스|120ml",6],
 
+["블루큐라소 토닉","블루큐라소",
+"블루큐라소|30ml","토닉워터|120ml",6],
 
-  /* =========================================================
-     Render Everything
-     ========================================================= */
+["자몽 진","진",
+"진|45ml","자몽시럽|15ml",
+"토닉워터|120ml",11],
 
-  function renderAll() {
+["애플 보드카","보드카",
+"보드카|45ml","사과주스|120ml",11],
 
-    renderHome();
-    renderCocktails();
-    renderIngredients();
-    renderFavorites();
-  }
+["애플 진 하이볼","진",
+"진|45ml","사과주스|90ml",
+"토닉워터|60ml",11],
 
+["그레나딘 보드카","보드카",
+"보드카|45ml","그레나딘시럽|15ml",
+"오렌지주스|90ml",11],
 
-  /* =========================================================
-     Keyboard
-     ========================================================= */
+["피치 사이다","피치트리",
+"피치트리|45ml","사이다|120ml",10],
 
-  document
-    .getElementById("newIngredientName")
-    .addEventListener("keydown", event => {
+["멜론 사이다","멜론리큐르",
+"멜론리큐르|45ml","사이다|120ml",10],
 
-      if (event.key === "Enter") {
-        addIngredient();
-      }
+["카시스 오렌지","카시스시럽",
+"카시스시럽|20ml","오렌지주스|120ml",4]
 
-    });
+].map(x=>({
 
+name:x[0],
+base:x[1],
+ings:x.slice(2,-1).map(v=>{
+ let [a,b]=v.split("|");
+ return {name:a,amount:b}
+}),
+abv:x.at(-1),
+custom:false
 
-  /* =========================================================
-     Start
-     ========================================================= */
+}));
 
-  renderAll();
+let owned=
+ JSON.parse(localStorage.getItem("mybar_owned")||"null")
+ ||defaultIngredients.slice();
 
+let favs=
+ JSON.parse(localStorage.getItem("mybar_favs")||"[]");
 
-  /* =========================================================
-     Service Worker
-     ========================================================= */
+let customs=
+ JSON.parse(localStorage.getItem("mybar_customs")||"[]");
 
-  if ("serviceWorker" in navigator) {
+customs.forEach(c=>c.custom=true);
 
-    window.addEventListener("load", () => {
+let tab="home";
+let query="";
+let abvFilter="all";
+let makeFilter="all";
 
-      navigator.serviceWorker.register("./sw.js")
-        .catch(error => {
-          console.log("Service Worker error:", error);
-        });
+function save(){
 
-    });
+ localStorage.setItem(
+  "mybar_owned",
+  JSON.stringify(owned)
+ );
 
-  }
+ localStorage.setItem(
+  "mybar_favs",
+  JSON.stringify(favs)
+ );
+
+ localStorage.setItem(
+  "mybar_customs",
+  JSON.stringify(customs)
+);
+
+}
+
+function allRecipes(){
+
+ return recipes.concat(customs);
+
+}
+
+function has(i){
+
+ return owned.includes(i);
+
+}
+
+function status(r){
+
+ let missing=r.ings.filter(i=>!has(i.name));
+
+ return {
+  missing,
+  ok:missing.length===0
+ };
+
+}
+
+function esc(s){
+
+ return String(s).replace(
+  /[&<>"']/g,
+  m=>({
+   "&":"&amp;",
+   "<":"&lt;",
+   ">":"&gt;",
+   '"':"&quot;",
+   "'":"&#039;"
+  }[m])
+ );
+
+}
+
+function filtered(list){
+
+ return list.filter(r=>{
+
+  let q=query.trim().toLowerCase();
+
+  let hit=
+   !q ||
+   r.name.toLowerCase().includes(q) ||
+   r.ings.some(
+    i=>i.name.toLowerCase().includes(q)
+   );
+
+  let ab=
+   abvFilter==="all" ||
+   (abvFilter==="0-5"&&r.abv<=5) ||
+   (abvFilter==="5-10"&&r.abv>5&&r.abv<=10) ||
+   (abvFilter==="10-15"&&r.abv>10&&r.abv<=15) ||
+   (abvFilter==="15+"&&r.abv>15);
+
+  let st=status(r);
+
+  let mf=
+   makeFilter==="all" ||
+   (makeFilter==="yes"&&st.ok) ||
+   (makeFilter==="no"&&!st.ok);
+
+  return hit&&ab&&mf;
+
+ });
+
+}
+
+function card(r){
+
+ let st=status(r);
+ let isFav=favs.includes(r.name);
+
+ return `
+
+<div class="card"
+ onclick='openRecipe(${JSON.stringify(r.name)})'>
+
+<button class="fav"
+ onclick='event.stopPropagation();
+ toggleFav(${JSON.stringify(r.name)})'>
+
+${isFav?"❤️":"♡"}
+
+</button>
+
+<h3>${esc(r.name)}</h3>
+
+<div class="meta">
+약 ${r.abv}% · ${r.ings.length}가지 재료
+</div>
+
+<span class="tag ${st.ok?"ok":"warn"}">
+
+${st.ok
+ ?"🟢 바로 만들기"
+ :"🟡 "+st.missing.length+"개 부족"}
+
+</span>
+
+${r.custom
+ ?'<span class="tag">✏️ 자작</span>'
+ :""
+}
+
+</div>
+
+`;
+
+}
+
+function renderHome(){
+
+ let list=
+  allRecipes()
+  .filter(r=>status(r).ok);
+
+ return `
+
+<div class="hero">
+
+<h1>오늘 뭐 마시지? 🍸</h1>
+
+<p>
+현재 가진 재료로 바로 만들 수 있는
+칵테일을 찾아보세요.
+</p>
+
+<div class="actions">
+
+<button class="primary"
+ onclick="randomCocktail()">
+🎲 랜덤 추천
+</button>
+
+<button class="secondary"
+ onclick="tab='cocktails';render()">
+전체 보기
+</button>
+
+</div>
+
+</div>
+
+<div class="statgrid">
+
+<div class="stat">
+<b>${owned.length}</b>
+<small>보유 재료</small>
+</div>
+
+<div class="stat">
+<b>${list.length}</b>
+<small>지금 가능</small>
+</div>
+
+<div class="stat">
+<b>${favs.length}</b>
+<small>즐겨찾기</small>
+</div>
+
+</div>
+
+<div class="sectionTitle">
+지금 만들 수 있어요
+</div>
+
+<div class="grid">
+
+${list.slice(0,6).map(card).join("")||
+'<div class="empty">아직 바로 만들 수 있는 칵테일이 없어요.</div>'}
+
+</div>
+
+<div class="sectionTitle">
+내 재료로 찾아보기
+</div>
+
+<div class="row">
+
+${owned.slice(0,12).map(i=>
+
+`<button class="pill"
+onclick='searchIngredient(${JSON.stringify(i)})'>
+${esc(i)}
+</button>`
+
+).join("")}
+
+</div>
+
+`;
+
+}
+
+function filters(){
+
+return `
+
+<div class="sectionTitle">
+만들 수 있는지
+</div>
+
+<div class="row">
+
+<button class="pill ${makeFilter==="all"?"active":""}"
+onclick="setMake('all')">
+전체
+</button>
+
+<button class="pill ${makeFilter==="yes"?"active":""}"
+onclick="setMake('yes')">
+🟢 만들 수 있음
+</button>
+
+<button class="pill ${makeFilter==="no"?"active":""}"
+onclick="setMake('no')">
+🟡 부족 재료
+</button>
+
+</div>
+
+<div class="sectionTitle">
+도수
+</div>
+
+<div class="row">
+
+<button class="pill ${abvFilter==="all"?"active":""}"
+onclick="setAbv('all')">
+전체
+</button>
+
+<button class="pill ${abvFilter==="0-5"?"active":""}"
+onclick="setAbv('0-5')">
+0~5%
+</button>
+
+<button class="pill ${abvFilter==="5-10"?"active":""}"
+onclick="setAbv('5-10')">
+5~10%
+</button>
+
+<button class="pill ${abvFilter==="10-15"?"active":""}"
+onclick="setAbv('10-15')">
+10~15%
+</button>
+
+<button class="pill ${abvFilter==="15+"?"active":""}"
+onclick="setAbv('15+')">
+15% 이상
+</button>
+
+</div>
+
+`;
+
+}
+
+function renderCocktails(){
+
+ let list=filtered(allRecipes());
+
+ return `
+
+${filters()}
+
+<div class="sectionTitle">
+칵테일 ${list.length}개
+</div>
+
+<div class="grid">
+
+${list.map(card).join("")||
+'<div class="empty">검색 조건에 맞는 칵테일이 없어요.</div>'}
+
+</div>
+
+`;
+
+}
+
+function renderIngredients(){
+
+ let q=query.toLowerCase();
+
+ let list=
+  owned.filter(
+   i=>i.toLowerCase().includes(q)
+  );
+
+ return `
+
+<div class="hero">
+
+<h1>내 재료 🧊</h1>
+
+<p>
+재료를 추가하거나 삭제하면
+만들 수 있는 칵테일이 자동으로 바뀝니다.
+</p>
+
+<button class="primary"
+onclick="openIngredientModal()">
+＋ 재료 추가
+</button>
+
+</div>
+
+<div class="sectionTitle">
+보유 재료 ${owned.length}개
+</div>
+
+<div class="list">
+
+${list.map(i=>`
+
+<div class="item">
+
+<div>
+
+<b>${esc(i)}</b>
+<br>
+<small>이 재료로 만들기 →</small>
+
+</div>
+
+<div>
+
+<button class="secondary"
+onclick='searchIngredient(${JSON.stringify(i)})'>
+보기
+</button>
+
+<button class="danger"
+onclick='removeIngredient(${JSON.stringify(i)})'>
+삭제
+</button>
+
+</div>
+
+</div>
+
+`).join("")||
+
+'<div class="empty">검색 결과가 없어요.</div>'}
+
+</div>
+
+`;
+
+}
+
+function renderFav(){
+
+ let list=
+  allRecipes()
+  .filter(r=>favs.includes(r.name));
+
+ return `
+
+<div class="hero">
+
+<h1>즐겨찾기 ❤️</h1>
+
+<p>
+마음에 드는 칵테일을 저장해두세요.
+</p>
+
+</div>
+
+<div class="grid">
+
+${list.map(card).join("")||
+'<div class="empty">아직 즐겨찾기한 칵테일이 없어요.</div>'}
+
+</div>
+
+`;
+
+}
+
+function render(){
+
+ document.getElementById("globalSearch").value=query;
+
+ document
+  .querySelectorAll(".bottom button")
+  .forEach(b=>
+   b.classList.toggle("on",b.dataset.tab===tab)
+  );
+
+ document.getElementById("main").innerHTML=
+
+  tab==="home"
+   ?renderHome()
+   :tab==="cocktails"
+   ?renderCocktails()
+   :tab==="ingredients"
+   ?renderIngredients()
+   :renderFav();
+
+}
+
+function toggleFav(name){
+
+ if(favs.includes(name))
+  favs=favs.filter(x=>x!==name);
+ else
+  favs.push(name);
+
+ save();
+ render();
+
+}
+
+function setAbv(x){
+
+ abvFilter=x;
+ tab="cocktails";
+ render();
+
+}
+
+function setMake(x){
+
+ makeFilter=x;
+ tab="cocktails";
+ render();
+
+}
+
+function searchIngredient(i){
+
+ query=i;
+ tab="cocktails";
+ makeFilter="all";
+ abvFilter="all";
+ render();
+
+}
+
+function randomCocktail(){
+
+ let list=
+  allRecipes()
+  .filter(r=>status(r).ok);
+
+ if(!list.length){
+
+  alert("현재 재료로 만들 수 있는 칵테일이 없어요.");
+  return;
+
+ }
+
+ let r=
+  list[Math.floor(Math.random()*list.length)];
+
+ openRecipe(r.name);
+
+}
+
+function openRecipe(name){
+
+ let r=
+  allRecipes()
+  .find(x=>x.name===name);
+
+ if(!r)return;
+
+ let st=status(r);
+
+ document.getElementById("sheet").innerHTML=`
+
+<button class="close"
+onclick="closeModal()">
+×
+</button>
+
+<h2>${esc(r.name)}</h2>
+
+<div class="meta">
+약 ${r.abv}% ·
+${r.custom?"자작 칵테일":"MyBar 레시피"}
+</div>
+
+<div class="sectionTitle">
+재료
+</div>
+
+${r.ings.map(i=>`
+
+<div class="recipeLine">
+
+<span class="${has(i.name)?"match":"missing"}">
+
+${has(i.name)?"✓":"✕"}
+${esc(i.name)}
+
+</span>
+
+<b>${esc(i.amount)}</b>
+
+</div>
+
+`).join("")}
+
+<div class="sectionTitle">
+만드는 법
+</div>
+
+<p>
+${esc(
+ r.method||
+ "얼음을 채운 잔에 재료를 순서대로 넣고 가볍게 저어 완성합니다."
+)}
+</p>
+
+${st.missing.length?
+
+`<div class="tag warn">
+부족한 재료:
+${st.missing.map(x=>esc(x.name)).join(", ")}
+</div>`
+
+:
+
+`<div class="tag ok">
+🟢 현재 재료로 만들 수 있습니다.
+</div>`
+
+}
+
+<div class="actions">
+
+<button class="primary"
+onclick='toggleFav(${JSON.stringify(r.name)});closeModal()'>
+
+${favs.includes(r.name)
+ ?"❤️ 즐겨찾기 해제"
+ :"♡ 즐겨찾기"}
+
+</button>
+
+${r.custom?
+
+`<button class="secondary"
+onclick='deleteCustom(${JSON.stringify(r.name)})'>
+자작칵테일 삭제
+</button>`
+
+:""}
+
+</div>
+
+`;
+
+ document.getElementById("modal").style.display="flex";
+
+}
+
+function closeModal(){
+
+ document.getElementById("modal").style.display="none";
+
+}
+
+function openIngredientModal(){
+
+ document.getElementById("sheet").innerHTML=`
+
+<button class="close"
+onclick="closeModal()">
+×
+</button>
+
+<h2>재료 추가</h2>
+
+<div class="field">
+
+<label>재료 이름</label>
+
+<input id="newIng"
+placeholder="예: 레몬주스">
+
+</div>
+
+<div class="actions">
+
+<button class="primary"
+onclick="addIngredient()">
+추가
+</button>
+
+<button class="secondary"
+onclick="closeModal()">
+취소
+</button>
+
+</div>
+
+`;
+
+ document.getElementById("modal").style.display="flex";
+
+}
+
+function addIngredient(){
+
+ let v=
+  document.getElementById("newIng")
+  .value.trim();
+
+ if(!v){
+
+  alert("재료 이름을 입력해주세요.");
+  return;
+
+ }
+
+ if(!owned.includes(v))
+  owned.push(v);
+
+ save();
+ closeModal();
+ render();
+
+}
+
+function removeIngredient(v){
+
+ if(confirm(`"${v}"을(를) 내 재료에서 삭제할까요?`)){
+
+  owned=
+   owned.filter(x=>x!==v);
+
+  save();
+  render();
+
+ }
+
+}
+
+function openCustomModal(){
+
+ document.getElementById("sheet").innerHTML=`
+
+<button class="close"
+onclick="closeModal()">
+×
+</button>
+
+<h2>✏️ 자작 칵테일 추가</h2>
+
+<div class="field">
+
+<label>칵테일 이름</label>
+
+<input id="cName"
+placeholder="예: 보형 스페셜">
+
+</div>
+
+<div class="field">
+
+<label>예상 도수 (%)</label>
+
+<input id="cAbv"
+type="number"
+min="0"
+max="100"
+step="0.1"
+placeholder="예: 12">
+
+</div>
+
+<div class="field">
+
+<label>
+재료
+(한 줄에 하나씩: 재료명, 용량)
+</label>
+
+<textarea
+id="cIng"
+rows="6"
+placeholder="진, 45ml
+파인애플주스, 90ml
+코코넛시럽, 10ml"></textarea>
+
+</div>
+
+<div class="field">
+
+<label>만드는 법</label>
+
+<textarea
+id="cMethod"
+rows="4"
+placeholder="얼음을 채우고 재료를 넣어 가볍게 저어주세요."></textarea>
+
+</div>
+
+<div class="actions">
+
+<button class="primary"
+onclick="saveCustom()">
+저장
+</button>
+
+<button class="secondary"
+onclick="closeModal()">
+취소
+</button>
+
+</div>
+
+`;
+
+ document.getElementById("modal").style.display="flex";
+
+}
+
+function saveCustom(){
+
+ let name=
+  document.getElementById("cName")
+  .value.trim();
+
+ let abv=
+  parseFloat(
+   document.getElementById("cAbv").value
+  )||0;
+
+ let raw=
+  document.getElementById("cIng")
+  .value.trim();
+
+ let method=
+  document.getElementById("cMethod")
+  .value.trim();
+
+ if(!name||!raw){
+
+  alert("이름과 재료를 입력해주세요.");
+  return;
+
+ }
+
+ let ings=
+  raw.split(/\n/)
+  .map(line=>{
+
+   let p=line.split(",");
+
+   return {
+
+    name:(p[0]||"").trim(),
+
+    amount:
+     (p.slice(1).join(",")||"적당량").trim()
+
+   };
+
+  })
+  .filter(x=>x.name);
+
+ if(!ings.length){
+
+  alert("재료를 입력해주세요.");
+  return;
+
+ }
+
+ customs.push({
+
+  name,
+  base:"자작",
+  ings,
+  abv,
+  method,
+  custom:true
+
+ });
+
+ save();
+ closeModal();
+
+ tab="cocktails";
+ query=name;
+
+ render();
+
+}
+
+function deleteCustom(name){
+
+ if(confirm(`"${name}" 자작 칵테일을 삭제할까요?`)){
+
+  customs=
+   customs.filter(x=>x.name!==name);
+
+  favs=
+   favs.filter(x=>x!==name);
+
+  save();
+  closeModal();
+  render();
+
+ }
+
+}
+
+document
+ .querySelectorAll(".bottom button")
+ .forEach(b=>{
+
+  b.onclick=()=>{
+
+   tab=b.dataset.tab;
+   query="";
+   abvFilter="all";
+   makeFilter="all";
+
+   render();
+
+  };
+
+ });
+
+document
+ .getElementById("globalSearch")
+ .addEventListener("input",e=>{
+
+  query=e.target.value;
+
+  if(tab==="home")
+   tab="cocktails";
+
+  render();
+
+ });
+
+document
+ .getElementById("addCocktail")
+ .onclick=openCustomModal;
+
+document
+ .getElementById("modal")
+ .addEventListener("click",e=>{
+
+  if(e.target.id==="modal")
+   closeModal();
+
+ });
+
+if("serviceWorker" in navigator){
+
+ window.addEventListener("load",()=>{
+
+  navigator.serviceWorker
+   .register("./sw.js")
+   .catch(()=>{});
+
+ });
+
+}
+
+render();
 
 </script>
 
