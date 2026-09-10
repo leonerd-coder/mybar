@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#111111">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="MyBar">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon-180.png">
+  <link rel="stylesheet" href="style.css">
+  <title>MyBar</title>
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <h1>MyBar</h1>
+      <p>나만의 홈바 & 칵테일</p>
+    </div>
+    <button id="addBtn" class="primary">＋ 재료 추가</button>
+  </header>
+  <main>
+    <section id="home" class="page active">
+      <div class="hero">
+        <h2>내 홈바</h2>
+        <p>가지고 있는 재료로 만들 수 있는 칵테일을 찾아보세요.</p>
+      </div>
+      <div class="stats">
+        <div class="stat">
+          <strong id="ingredientCount">0</strong>
+          <span>보유 재료</span>
+        </div>
+        <div class="stat">
+          <strong id="cocktailCount">0</strong>
+          <span>추천 칵테일</span>
+        </div>
+      </div>
+      <h3>추천 칵테일</h3>
+      <div id="cocktailList" class="cocktail-grid"></div>
+    </section>
+    <section id="ingredients" class="page">
+      <div class="section-title">
+        <h2>내 재료</h2>
+        <button id="addBtn2" class="primary">＋ 추가</button>
+      </div>
+      <div id="ingredientList" class="ingredient-list"></div>
+    </section>
+  </main>
+  <nav class="bottom-nav">
+    <button class="nav-item active" data-page="home">
+      <span>🍸</span>
+      <small>홈</small>
+    </button>
+    <button class="nav-item" data-page="ingredients">
+      <span>🧊</span>
+      <small>내 재료</small>
+    </button>
+  </nav>
+  <div id="modal" class="modal hidden">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h2>재료 추가</h2>
+        <button id="closeModal">✕</button>
+      </div>
+      <label>재료 이름</label>
+      <input id="ingredientInput" type="text" placeholder="예: 진, 럼, 오렌지주스">
+      <label>종류</label>
+      <select id="ingredientType">
+        <option value="base">베이스</option>
+        <option value="liqueur">리큐르</option>
+        <option value="syrup">시럽</option>
+        <option value="mixer">주스 / 믹서</option>
+        <option value="other">기타</option>
+      </select>
+      <button id="saveIngredient" class="primary full">추가하기</button>
+    </div>
+  </div>
+  <script src="app.js"></script>
+  <script>
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("./sw.js");
+      });
+    }
+  </script>
+</body>
+</html>
