@@ -1,0 +1,23 @@
+{
+  "name": "MyBar",
+  "short_name": "MyBar",
+  "description": "나만의 홈바와 칵테일 관리 앱",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f6f6f6",
+  "theme_color": "#111111",
+  "orientation": "portrait",
+  "lang": "ko",
+  "icons": [
+    {
+      "src": "icon-180.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
