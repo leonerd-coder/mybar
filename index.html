@@ -1013,17 +1013,91 @@ ${list.map(card).join("")||
 `;
 
 }
-
+function escapeHtml(str){
+  return String(str)
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;")
+    .replace(/'/g,"&#039;");
+}
 function renderIngredients(){
+  const el=document.getElementById("content");
 
- let q=query.toLowerCase();
+  const ownedSet=new Set(owned);
 
- let list=
-  owned.filter(
-   i=>i.toLowerCase().includes(q)
-  );
+  const filtered=allIngredients
+    .filter(i=>i.toLowerCase().includes(query.toLowerCase()))
+    .sort((a,b)=>{
+      const ao=ownedSet.has(a);
+      const bo=ownedSet.has(b);
+      if(ao!==bo) return ao ? -1 : 1;
+      return a.localeCompare(b,"ko");
+    });
 
- return `
+  el.innerHTML=`
+    <div class="sectionTitle">
+      <h2>🧂 내 재료</h2>
+      <div class="muted">
+        보유 ${ownedSet.size}개 / 전체 ${allIngredients.length}개
+      </div>
+    </div>
+
+    <div class="searchBox">
+      <input
+        id="ingredientSearch"
+        placeholder="재료 검색"
+        value="${query}"
+      >
+    </div>
+
+    <div class="ingredientList">
+      ${filtered.map((ingredient,index)=>`
+        <label class="ingredientItem">
+          <input
+            type="checkbox"
+            data-ingredient="${escapeHtml(ingredient)}"
+            ${ownedSet.has(ingredient) ? "checked" : ""}
+          >
+          <span class="ingredientName">
+            ${escapeHtml(ingredient)}
+          </span>
+          <span class="ingredientStatus">
+            ${ownedSet.has(ingredient) ? "보유" : "미보유"}
+          </span>
+        </label>
+      `).join("")}
+    </div>
+  `;
+
+  document.getElementById("ingredientSearch")
+    ?.addEventListener("input",e=>{
+      query=e.target.value;
+      renderIngredients();
+      document.getElementById("ingredientSearch")?.focus();
+    });
+
+  document.querySelectorAll("[data-ingredient]").forEach(cb=>{
+    cb.addEventListener("change",e=>{
+      const ingredient=e.target.dataset.ingredient;
+
+      if(e.target.checked){
+        if(!owned.includes(ingredient)){
+          owned.push(ingredient);
+        }
+      }else{
+        owned=owned.filter(i=>i!==ingredient);
+      }
+
+      localStorage.setItem(
+        "mybar_owned",
+        JSON.stringify(owned)
+      );
+
+      renderIngredients();
+    });
+  });
+}
 
 <div class="hero">
 
