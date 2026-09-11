@@ -770,6 +770,11 @@ let query="";
 let abvFilter="all";
 let makeFilter="all";
 
+let customIngredientAliasGroups =
+ JSON.parse(
+  localStorage.getItem("mybar_custom_aliases") || "[]"
+ );
+ 
 function save(){
 
  localStorage.setItem(
@@ -785,7 +790,12 @@ function save(){
  localStorage.setItem(
   "mybar_customs",
   JSON.stringify(customs)
-);
+ );
+
+ localStorage.setItem(
+  "mybar_custom_aliases",
+  JSON.stringify(customIngredientAliasGroups)
+ );
 
 }
 
