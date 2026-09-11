@@ -1,35 +1,47 @@
-const CACHE_NAME = "mybar-v3";
+const CACHE_NAME="mybar-v4";
 
-const FILES = [
+const FILES=[
   "./",
   "./index.html",
-  "./sw.js"
+  "./sw.js",
+  "./manifest.json"
 ];
 
-self.addEventListener("install", e => {
+self.addEventListener("install",e=>{
   e.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(FILES))
+    caches.open(CACHE_NAME).then(cache=>cache.addAll(FILES))
   );
   self.skipWaiting();
 });
 
-self.addEventListener("activate", e => {
+self.addEventListener("activate",e=>{
   e.waitUntil(
-    caches.keys().then(keys =>
+    caches.keys().then(keys=>
       Promise.all(
         keys
-          .filter(key => key !== CACHE_NAME)
-          .map(key => caches.delete(key))
+          .filter(k=>k!==CACHE_NAME)
+          .map(k=>caches.delete(k))
       )
     )
   );
+
   self.clients.claim();
 });
 
-self.addEventListener("fetch", e => {
+self.addEventListener("fetch",e=>{
   e.respondWith(
-    caches.match(e.request).then(
-      response => response || fetch(e.request)
-    )
+    fetch(e.request)
+      .then(response=>{
+        const copy=response.clone();
+
+        caches.open(CACHE_NAME).then(cache=>{
+          cache.put(e.request,copy);
+        });
+
+        return response;
+      })
+      .catch(()=>
+        caches.match(e.request)
+      )
   );
 });
