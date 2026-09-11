@@ -1021,173 +1021,120 @@ function escapeHtml(str){
     .replace(/"/g,"&quot;")
     .replace(/'/g,"&#039;");
 }
+function getAllIngredients(){
+  const recipeIngredients=recipes.flatMap(r =>
+    (r.ings||[]).map(i=>i.name)
+  );
+
+  const customIngredients=customs.flatMap(c =>
+    (c.ings||[]).map(i=>i.name)
+  );
+
+  return [...new Set([
+    ...defaultIngredients,
+    ...recipeIngredients,
+    ...customIngredients,
+    ...owned
+  ])];
+}
+
+function toggleIngredient(name,checked){
+  if(checked){
+    if(!owned.includes(name)){
+      owned.push(name);
+    }
+  }else{
+    owned=owned.filter(i=>i!==name);
+  }
+
+  save();
+  render();
+}
+
 function renderIngredients(){
-  const el=document.getElementById("content");
 
-  const ownedSet=new Set(owned);
+  const allIngredients=getAllIngredients();
+  const q=query.toLowerCase();
 
-  const filtered=allIngredients
-    .filter(i=>i.toLowerCase().includes(query.toLowerCase()))
+  const list=allIngredients
+    .filter(i=>i.toLowerCase().includes(q))
     .sort((a,b)=>{
-      const ao=ownedSet.has(a);
-      const bo=ownedSet.has(b);
-      if(ao!==bo) return ao ? -1 : 1;
+      const aOwned=owned.includes(a);
+      const bOwned=owned.includes(b);
+
+      if(aOwned!==bOwned){
+        return aOwned ? -1 : 1;
+      }
+
       return a.localeCompare(b,"ko");
     });
 
-  el.innerHTML=`
-    <div class="sectionTitle">
-      <h2>🧂 내 재료</h2>
-      <div class="muted">
-        보유 ${ownedSet.size}개 / 전체 ${allIngredients.length}개
+  return `
+    <div class="hero">
+
+      <h1>내 재료 🧊</h1>
+
+      <p>
+        가지고 있는 재료를 체크하세요.
+        체크된 재료를 기준으로 만들 수 있는 칵테일이 자동으로 계산됩니다.
+      </p>
+
+      <div class="searchBox">
+        <input
+          id="ingredientSearch"
+          placeholder="재료 검색"
+          value="${esc(query)}"
+          oninput="query=this.value;render()"
+        >
       </div>
+
     </div>
 
-    <div class="searchBox">
-      <input
-        id="ingredientSearch"
-        placeholder="재료 검색"
-        value="${query}"
-      >
+    <div class="sectionTitle">
+      전체 재료 ${allIngredients.length}개
+      · 보유 ${owned.length}개
     </div>
 
-    <div class="ingredientList">
-      ${filtered.map((ingredient,index)=>`
-        <label class="ingredientItem">
+    <div class="list">
+
+      ${list.map(i=>`
+        <label class="item" style="
+          display:flex;
+          align-items:center;
+          gap:12px;
+          cursor:pointer;
+        ">
+
           <input
             type="checkbox"
-            data-ingredient="${escapeHtml(ingredient)}"
-            ${ownedSet.has(ingredient) ? "checked" : ""}
+            style="
+              width:22px;
+              height:22px;
+              flex:none;
+            "
+            ${owned.includes(i) ? "checked" : ""}
+            onchange="toggleIngredient(decodeURIComponent('${encodeURIComponent(i)}'),this.checked)"
           >
-          <span class="ingredientName">
-            ${escapeHtml(ingredient)}
-          </span>
-          <span class="ingredientStatus">
-            ${ownedSet.has(ingredient) ? "보유" : "미보유"}
-          </span>
+
+          <div style="flex:1">
+            <b>${esc(i)}</b>
+            <br>
+            <small>
+              ${owned.includes(i) ? "보유 중" : "미보유"}
+            </small>
+          </div>
+
         </label>
       `).join("")}
-    </div>
-  `;
 
-  document.getElementById("ingredientSearch")
-    ?.addEventListener("input",e=>{
-      query=e.target.value;
-      renderIngredients();
-      document.getElementById("ingredientSearch")?.focus();
-    });
-
-  document.querySelectorAll("[data-ingredient]").forEach(cb=>{
-    cb.addEventListener("change",e=>{
-      const ingredient=e.target.dataset.ingredient;
-
-      if(e.target.checked){
-        if(!owned.includes(ingredient)){
-          owned.push(ingredient);
-        }
-      }else{
-        owned=owned.filter(i=>i!==ingredient);
+      ${list.length===0
+        ? `<div class="empty">검색 결과가 없어요.</div>`
+        : ""
       }
 
-      localStorage.setItem(
-        "mybar_owned",
-        JSON.stringify(owned)
-      );
-
-      renderIngredients();
-    });
-  });
+    </div>
+  `;
 }
-
-<div class="hero">
-
-<h1>내 재료 🧊</h1>
-
-<p>
-재료를 추가하거나 삭제하면
-만들 수 있는 칵테일이 자동으로 바뀝니다.
-</p>
-
-<button class="primary"
-onclick="openIngredientModal()">
-＋ 재료 추가
-</button>
-
-</div>
-
-<div class="sectionTitle">
-보유 재료 ${owned.length}개
-</div>
-
-<div class="list">
-
-${list.map(i=>`
-
-<div class="item">
-
-<div>
-
-<b>${esc(i)}</b>
-<br>
-<small>이 재료로 만들기 →</small>
-
-</div>
-
-<div>
-
-<button class="secondary"
-onclick='searchIngredient(${JSON.stringify(i)})'>
-보기
-</button>
-
-<button class="danger"
-onclick='removeIngredient(${JSON.stringify(i)})'>
-삭제
-</button>
-
-</div>
-
-</div>
-
-`).join("")||
-
-'<div class="empty">검색 결과가 없어요.</div>'}
-
-</div>
-
-`;
-
-}
-
-function renderFav(){
-
- let list=
-  allRecipes()
-  .filter(r=>favs.includes(r.name));
-
- return `
-
-<div class="hero">
-
-<h1>즐겨찾기 ❤️</h1>
-
-<p>
-마음에 드는 칵테일을 저장해두세요.
-</p>
-
-</div>
-
-<div class="grid">
-
-${list.map(card).join("")||
-'<div class="empty">아직 즐겨찾기한 칵테일이 없어요.</div>'}
-
-</div>
-
-`;
-
-}
-
 function render(){
 
  document.getElementById("globalSearch").value=query;
