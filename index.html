@@ -420,6 +420,67 @@ const defaultIngredients = [
   "생크림"
 ];
 
+ const ingredientAliasGroups = [
+
+  // 생제르망
+  [
+    "생제르망",
+    "엘더플라워 리큐르",
+    "엘더플라워",
+    "엘더",
+    "St-Germain",
+    "St Germain"
+  ],
+
+  // 깔루아
+  [
+    "깔루아",
+    "Kahlúa",
+    "Kahlua",
+    "커피리큐르",
+    "커피 리큐르"
+  ],
+
+  // 디사론노
+  [
+    "디사론노",
+    "Disaronno",
+    "아마레또",
+    "아마레토",
+    "Amaretto"
+  ],
+
+  // 미도리
+  [
+    "미도리",
+    "Midori",
+    "멜론리큐르",
+    "멜론 리큐르"
+  ],
+
+  // 트리플섹
+  [
+    "트리플섹",
+    "Triple Sec",
+    "트리플 섹"
+  ],
+
+  // 블루큐라소
+  [
+    "블루큐라소",
+    "블루 큐라소",
+    "Blue Curaçao",
+    "Blue Curacao"
+  ],
+
+  // 리몬첼로
+  [
+    "리몬첼로",
+    "Limoncello"
+  ]
+
+];
+ 
 const recipes = [
 
 ["올드 패션드","버번위스키","버번위스키|45ml","설탕|1tsp","앙고스투라비터|2dash",30],
@@ -737,7 +798,11 @@ function allRecipes(){
 
 function has(i){
 
- return owned.includes(i);
+  const target=canonicalIngredient(i);
+
+  return owned.some(item =>
+    canonicalIngredient(item)===target
+  );
 
 }
 
@@ -776,9 +841,8 @@ function filtered(list){
   let hit=
    !q ||
    r.name.toLowerCase().includes(q) ||
-   r.ings.some(
-    i=>i.name.toLowerCase().includes(q)
-   );
+   r.ings.some(i=>ingredientSearchHit(i.name,q))
+   ;
 
   let ab=
    abvFilter==="all" ||
@@ -1021,7 +1085,44 @@ function escapeHtml(str){
     .replace(/"/g,"&quot;")
     .replace(/'/g,"&#039;");
 }
+
+ function normalizeIngredientName(name){
+  return String(name)
+    .trim()
+    .toLowerCase()
+    .replace(/[\s_-]/g,"");
+}
+
+function getIngredientAliasGroup(name){
+
+  const normalized=normalizeIngredientName(name);
+
+  const group=ingredientAliasGroups.find(group =>
+    group.some(alias =>
+      normalizeIngredientName(alias)===normalized
+    )
+  );
+
+  return group || [name];
+}
+
+function canonicalIngredient(name){
+  return getIngredientAliasGroup(name)[0];
+}
+
+function ingredientSearchHit(name,q){
+
+  if(!q) return true;
+
+  const normalizedQuery=normalizeIngredientName(q);
+
+  return getIngredientAliasGroup(name).some(alias =>
+    normalizeIngredientName(alias).includes(normalizedQuery)
+  );
+}
+ 
 function getAllIngredients(){
+
   const recipeIngredients=recipes.flatMap(r =>
     (r.ings||[]).map(i=>i.name)
   );
@@ -1030,21 +1131,42 @@ function getAllIngredients(){
     (c.ings||[]).map(i=>i.name)
   );
 
-  return [...new Set([
+  const all=[
     ...defaultIngredients,
     ...recipeIngredients,
     ...customIngredients,
     ...owned
-  ])];
+  ];
+
+  return [
+    ...new Set(
+      all.map(name => canonicalIngredient(name))
+    )
+  ];
+
 }
 
 function toggleIngredient(name,checked){
+
+  const canonical=canonicalIngredient(name);
+
   if(checked){
-    if(!owned.includes(name)){
-      owned.push(name);
-    }
+
+    // 같은 별칭으로 등록된 기존 항목 제거
+    owned=owned.filter(
+      item=>canonicalIngredient(item)!==canonical
+    );
+
+    // 대표 이름으로 저장
+    owned.push(canonical);
+
   }else{
-    owned=owned.filter(i=>i!==name);
+
+    // 별칭까지 같은 재료를 모두 제거
+    owned=owned.filter(
+      item=>canonicalIngredient(item)!==canonical
+    );
+
   }
 
   save();
@@ -1057,7 +1179,7 @@ function renderIngredients(){
   const q=query.toLowerCase();
 
   const list=allIngredients
-    .filter(i=>i.toLowerCase().includes(q))
+    .filter(i=>ingredientSearchHit(i,q))
     .sort((a,b)=>{
       const aOwned=owned.includes(a);
       const bOwned=owned.includes(b);
@@ -1098,12 +1220,84 @@ function renderIngredients(){
     <div class="list">
 
       ${list.map(i=>`
-        <label class="item" style="
-          display:flex;
-          align-items:center;
-          gap:12px;
+       <div class="item" style="
+  display:flex;
+  align-items:center;
+  gap:12px;
+">
+
+  <div
+    style="
+      width:46px;
+      min-width:46px;
+      height:46px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+    "
+    onclick="
+      const cb=this.querySelector('input');
+      cb.checked=!cb.checked;
+      cb.dispatchEvent(new Event('change'));
+    "
+  >
+
+    <input
+      type="checkbox"
+      style="
+        width:22px;
+        height:22px;
+        cursor:pointer;
+      "
+      ${has(i) ? "checked" : ""}
+      onclick="event.stopPropagation()"
+      onchange="
+        toggleIngredient(
+          decodeURIComponent('${encodeURIComponent(i)}'),
+          this.checked
+        )
+      "
+    >
+
+  </div>
+
+<div style="flex:1">
+
+  <b>${esc(i)}</b>
+
+  <br>
+
+  <small>
+    ${has(i) ? "보유 중" : "미보유"}
+  </small>
+
+</div>
+
+${
+  !isDefaultIngredient(i)
+    ? `
+      <button
+        onclick="
+          event.stopPropagation();
+          removeIngredient(decodeURIComponent('${encodeURIComponent(i)}'));
+        "
+        style="
+          border:0;
+          background:none;
+          font-size:18px;
           cursor:pointer;
-        ">
+          padding:8px;
+        "
+        title="재료 삭제"
+      >
+        🗑️
+      </button>
+    `
+    : ""
+}
+
+</div>
 
           <input
             type="checkbox"
@@ -1362,26 +1556,61 @@ onclick="closeModal()">
 
 function addIngredient(){
 
- let v=
-  document.getElementById("newIng")
-  .value.trim();
+  const name=prompt("추가할 재료 이름");
 
- if(!v){
+  if(!name || !name.trim()) return;
 
-  alert("재료 이름을 입력해주세요.");
-  return;
+  const ingredient=name.trim();
 
- }
+  const canonical=canonicalIngredient(ingredient);
 
- if(!owned.includes(v))
-  owned.push(v);
+  if(!owned.some(
+    item=>canonicalIngredient(item)===canonical
+  )){
+    owned.push(ingredient);
+  }
 
- save();
- closeModal();
- render();
+  save();
+  closeModal();
+  render();
 
 }
 
+ function isDefaultIngredient(name){
+
+  const canonical=canonicalIngredient(name);
+
+  return defaultIngredients.some(
+    item=>canonicalIngredient(item)===canonical
+  );
+
+}
+
+function removeIngredient(name){
+
+  if(isDefaultIngredient(name)){
+
+    alert("기본 재료는 삭제할 수 없습니다.\n체크를 해제해서 미보유 상태로 변경하세요.");
+
+    return;
+
+  }
+
+  if(!confirm(`"${name}" 재료를 삭제할까요?`)){
+    return;
+  }
+
+  const canonical=canonicalIngredient(name);
+
+  owned=owned.filter(
+    item=>canonicalIngredient(item)!==canonical
+  );
+
+  save();
+  render();
+
+}
+ 
 function removeIngredient(v){
 
  if(confirm(`"${v}"을(를) 내 재료에서 삭제할까요?`)){
