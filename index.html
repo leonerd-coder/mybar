@@ -755,8 +755,7 @@ custom:false
 }));
 
 let owned=
- JSON.parse(localStorage.getItem("mybar_owned")||"null")
- ||defaultIngredients.slice();
+ JSON.parse(localStorage.getItem("mybar_owned")||"[]");
 
 let favs=
  JSON.parse(localStorage.getItem("mybar_favs")||"[]");
@@ -1556,19 +1555,27 @@ onclick="closeModal()">
 
 function addIngredient(){
 
-  const name=prompt("추가할 재료 이름");
+  const input=document.getElementById("newIng");
 
-  if(!name || !name.trim()) return;
+  if(!input) return;
 
-  const ingredient=name.trim();
+  const ingredient=input.value.trim();
+
+  if(!ingredient){
+    alert("재료 이름을 입력하세요.");
+    return;
+  }
 
   const canonical=canonicalIngredient(ingredient);
 
-  if(!owned.some(
+  if(owned.some(
     item=>canonicalIngredient(item)===canonical
   )){
-    owned.push(ingredient);
+    alert("이미 등록된 재료입니다.");
+    return;
   }
+
+  owned.push(ingredient);
 
   save();
   closeModal();
@@ -1611,19 +1618,6 @@ function removeIngredient(name){
 
 }
  
-function removeIngredient(v){
-
- if(confirm(`"${v}"을(를) 내 재료에서 삭제할까요?`)){
-
-  owned=
-   owned.filter(x=>x!==v);
-
-  save();
-  render();
-
- }
-
-}
 
 function openCustomModal(){
 
@@ -1827,7 +1821,39 @@ document
 
 document
  .getElementById("addCocktail")
- .onclick=openCustomModal;
+ .onclick=openAddMenu;
+ function openAddMenu(){
+
+  openModal(`
+    <h2>추가</h2>
+
+    <div class="actions" style="display:flex;flex-direction:column;gap:10px;">
+
+      <button
+        class="primary"
+        onclick="closeModal();openCustomModal();"
+      >
+        🍸 자작 칵테일 추가
+      </button>
+
+      <button
+        class="secondary"
+        onclick="closeModal();openIngredientModal();"
+      >
+        🧊 재료 추가
+      </button>
+
+      <button
+        class="secondary"
+        onclick="closeModal();"
+      >
+        취소
+      </button>
+
+    </div>
+  `);
+
+}
 
 document
  .getElementById("modal")
