@@ -1106,13 +1106,25 @@ function getIngredientAliasGroup(name){
 
   const normalized=normalizeIngredientName(name);
 
-  const group=ingredientAliasGroups.find(group =>
+  // 사용자가 앱에서 추가한 별칭을 먼저 확인
+  const customGroup=customIngredientAliasGroups.find(group =>
     group.some(alias =>
       normalizeIngredientName(alias)===normalized
     )
   );
 
-  return group || [name];
+  if(customGroup){
+    return customGroup;
+  }
+
+  // 기본으로 들어있는 별칭 확인
+  const builtInGroup=ingredientAliasGroups.find(group =>
+    group.some(alias =>
+      normalizeIngredientName(alias)===normalized
+    )
+  );
+
+  return builtInGroup || [name];
 }
 
 function canonicalIngredient(name){
@@ -1319,14 +1331,27 @@ ${
             onchange="toggleIngredient(decodeURIComponent('${encodeURIComponent(i)}'),this.checked)"
           >
 
-          <div style="flex:1">
-            <b>${esc(i)}</b>
-            <br>
-            <small>
-              ${owned.includes(i) ? "보유 중" : "미보유"}
-            </small>
-          </div>
+          <div
+  style="
+    flex:1;
+    cursor:pointer;
+  "
+  onclick="
+    openAliasModal(
+      decodeURIComponent('${encodeURIComponent(i)}')
+    )
+  "
+>
 
+  <b>${esc(i)}</b>
+
+  <br>
+
+  <small>
+    ${has(i) ? "보유 중" : "미보유"}
+  </small>
+
+</div>
         </label>
       `).join("")}
 
@@ -1563,6 +1588,260 @@ onclick="closeModal()">
 
 }
 
+ function openAliasModal(name){
+
+  const canonical=canonicalIngredient(name);
+
+  const builtInGroup=
+    ingredientAliasGroups.find(group =>
+      group.some(alias =>
+        normalizeIngredientName(alias) ===
+        normalizeIngredientName(canonical)
+      )
+    ) || [canonical];
+
+  const customGroup=
+    customIngredientAliasGroups.find(group =>
+      group.some(alias =>
+        normalizeIngredientName(alias) ===
+        normalizeIngredientName(canonical)
+      )
+    ) || [canonical];
+
+  const aliases=[
+    ...new Set([
+      ...builtInGroup,
+      ...customGroup
+    ])
+  ].filter(alias =>
+    normalizeIngredientName(alias)!==
+    normalizeIngredientName(canonical)
+  );
+
+  document.getElementById("sheet").innerHTML=`
+
+    <button class="close"
+      onclick="closeModal()">
+      ×
+    </button>
+
+    <h2>🔗 재료 별칭</h2>
+
+    <div style="
+      margin-bottom:14px;
+      font-weight:700;
+      font-size:18px;
+    ">
+      ${esc(canonical)}
+    </div>
+
+    <div style="
+      font-size:13px;
+      color:#777;
+      margin-bottom:12px;
+    ">
+      아래 이름들은 같은 재료로 인식됩니다.
+    </div>
+
+    <div id="aliasList">
+
+      ${
+        aliases.length
+        ? aliases.map(alias=>`
+
+          <div style="
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            padding:10px 0;
+            border-bottom:1px solid #eee;
+          ">
+
+            <span>${esc(alias)}</span>
+
+            ${
+              customIngredientAliasGroups.some(group =>
+                group.includes(alias)
+              )
+              ? `
+                <button
+                  class="secondary"
+                  onclick="
+                    removeIngredientAlias(
+                      decodeURIComponent('${encodeURIComponent(canonical)}'),
+                      decodeURIComponent('${encodeURIComponent(alias)}')
+                    )
+                  "
+                >
+                  삭제
+                </button>
+              `
+              : `
+                <small style="color:#999">
+                  기본
+                </small>
+              `
+            }
+
+          </div>
+
+        `).join("")
+        : `
+          <div class="empty">
+            등록된 별칭이 없습니다.
+          </div>
+        `
+      }
+
+    </div>
+
+    <div class="field" style="margin-top:18px;">
+
+      <label>새 별칭</label>
+
+      <input
+        id="newAlias"
+        placeholder="예: 엘더플라워 리큐르"
+      >
+
+    </div>
+
+    <div class="actions">
+
+      <button
+        class="primary"
+        onclick="
+          addIngredientAlias(
+            decodeURIComponent('${encodeURIComponent(canonical)}')
+          )
+        "
+      >
+        + 별칭 추가
+      </button>
+
+      <button
+        class="secondary"
+        onclick="closeModal()"
+      >
+        닫기
+      </button>
+
+    </div>
+
+  `;
+
+  document.getElementById("modal").style.display="flex";
+
+}
+
+ function addIngredientAlias(canonical){
+
+  const input=document.getElementById("newAlias");
+
+  if(!input) return;
+
+  const alias=input.value.trim();
+
+  if(!alias){
+    alert("별칭을 입력하세요.");
+    return;
+  }
+
+  if(
+    normalizeIngredientName(alias) ===
+    normalizeIngredientName(canonical)
+  ){
+    alert("기본 재료 이름과 같은 이름입니다.");
+    return;
+  }
+
+  const alreadyExists=
+    getAllIngredients().some(name =>
+      normalizeIngredientName(name) ===
+      normalizeIngredientName(alias)
+    );
+
+  const existingAlias=
+    customIngredientAliasGroups.some(group =>
+      group.some(item =>
+        normalizeIngredientName(item) ===
+        normalizeIngredientName(alias)
+      )
+    );
+
+  if(existingAlias){
+    alert("이미 등록된 별칭입니다.");
+    return;
+  }
+
+  let group=
+    customIngredientAliasGroups.find(group =>
+      group.some(item =>
+        normalizeIngredientName(item) ===
+        normalizeIngredientName(canonical)
+      )
+    );
+
+  if(!group){
+
+    group=[canonical];
+
+    customIngredientAliasGroups.push(group);
+
+  }
+
+  group.push(alias);
+
+  save();
+
+  openAliasModal(canonical);
+
+  render();
+
+}
+
+ function removeIngredientAlias(canonical,alias){
+
+  const group=
+    customIngredientAliasGroups.find(group =>
+      group.some(item =>
+        normalizeIngredientName(item) ===
+        normalizeIngredientName(canonical)
+      )
+    );
+
+  if(!group) return;
+
+  const index=
+    group.findIndex(item =>
+      normalizeIngredientName(item) ===
+      normalizeIngredientName(alias)
+    );
+
+  if(index===-1) return;
+
+  group.splice(index,1);
+
+  if(group.length<=1){
+
+    const groupIndex=
+      customIngredientAliasGroups.indexOf(group);
+
+    customIngredientAliasGroups.splice(
+      groupIndex,
+      1
+    );
+
+  }
+
+  save();
+
+  openAliasModal(canonical);
+
+  render();
+
+}
+ 
 function addIngredient(){
 
   const input=document.getElementById("newIng");
